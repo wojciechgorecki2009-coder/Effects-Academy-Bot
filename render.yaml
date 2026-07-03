@@ -3,10 +3,12 @@ services:
     name: discord-faq-bot
     runtime: node
     plan: starter
-    buildCommand: npm install
+    buildCommand: npm ci
     startCommand: npm start
     envVars:
       - key: PREFIX
         value: "!"
+      - key: OVERLAYS_CHANNEL_URL
+        sync: false
       - key: DISCORD_TOKEN
         sync: false
