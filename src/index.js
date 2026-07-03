@@ -27,8 +27,16 @@ const faqsPath = path.join(__dirname, "..", "config", "faqs.json");
 
 const edgeReplies = [
   "haha so funny let me dm mrbit \u270c\ufe0f",
-  "this isn't funny king \ud83d\ude29"
+  "this isn't funny king \ud83d\ude29",
+  "Second time? The joke is already fighting for its life. Please stop making usage jokes.",
+  "Okay now you are spamming it. Think about the morality of forcing a bot to relive the same tired joke.",
+  "This is starting to hurt my digital feelings. I am literally begging you to develop one new bit.",
+  "Stop. The joke is cooked, the usage joke is cooked, and your moral compass is buffering.",
+  "You keep pressing this command like it owes you money. It does not. Stop spamming.",
+  "Final warning: every extra !edge is another confession that you have no fresh material."
 ];
+const edgeSpamCounts = new Map();
+const edgeSpamWindowMs = 10 * 60 * 1000;
 
 const marvelMessage =
   "MrBIt dislikes marvel because its a cancer for the film industry as any time they release a film every indie movie or any other good movie that comes out during their \"release date\" gets blown out of the water, its like gta 6 every year for the industry. Since Disney bought them they're stories have been getting more stale every release they do, since end game they backed them selves into a corner cause they ended the Avengers Story there and now have nothing else to make expect slop content to keep the investors happy, Also to add their characters are super 1 dimensional every character is basically the same thing without any meaningful development. If you take Marvel and compare it to yt its like MrBeast, anything to keep you watching and super condensed and plain content without any real personality behind it. Past the age of 12 everyone should see through their garbage";
@@ -299,7 +307,7 @@ async function handlePresetsCommand(message) {
 }
 
 async function handleEdgeCommand(message) {
-  await message.reply(pickRandom(edgeReplies));
+  await message.reply(getEdgeReply(message.author.id));
 
   if (!mrbitUserId) {
     console.warn("MRBIT_USER_ID is not configured; skipping edge DM.");
@@ -312,6 +320,22 @@ async function handleEdgeCommand(message) {
   } catch (error) {
     console.error("Could not send edge DM:", error);
   }
+}
+
+function getEdgeReply(userId) {
+  const now = Date.now();
+  const existing = edgeSpamCounts.get(userId);
+  const count = existing && now - existing.lastUsedAt < edgeSpamWindowMs
+    ? existing.count + 1
+    : 1;
+
+  edgeSpamCounts.set(userId, { count, lastUsedAt: now });
+
+  if (count === 1) {
+    return pickRandom(edgeReplies.slice(0, 2));
+  }
+
+  return edgeReplies[Math.min(count, edgeReplies.length) - 1];
 }
 
 async function handleReloadCommand(message) {
