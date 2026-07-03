@@ -14,6 +14,10 @@ A small Discord bot for answering common server questions with commands that sta
 - `!marvel` - Sends MrBIt's Marvel take.
 - `!wav` - Sends the WAV audio note.
 - `!website` - Sends the official Effects Academy website link.
+- `!youtube` - Sends the MrBitEdits YouTube link.
+- `!tiktok` - Sends the MrBitEdits TikTok link.
+- `!nexlo` - Sends Nexlo's TikTok link.
+- `!iusethis` - Sends iusethis's TikTok link.
 - `!reloadfaq` - Reloads `config/faqs.json` after you edit it. Requires the Discord **Manage Server** permission.
 
 ## Setup
@@ -78,3 +82,9 @@ To get the channel link in Discord, right-click the overlays channel and choose 
 Set `TOPAZ_CHANNEL_URL` in `.env` or in Render's environment variables.
 
 To get the channel link in Discord, right-click the Topaz versions channel and choose **Copy Channel Link**.
+
+## Edge DM
+
+Set `MRBIT_USER_ID` in `.env` or in Render's environment variables so `!edge` can DM MrBit.
+
+To get a Discord user ID, enable Developer Mode in Discord, right-click the user, and choose **Copy User ID**.
