@@ -19,6 +19,10 @@ A small Discord bot for answering common server questions with commands that sta
 - `!nexlo` - Sends Nexlo's TikTok link.
 - `!iusethis` - Sends iusethis's TikTok link.
 - `!pc` - Sends MrBit's PC specs.
+- `!senioreditor` - Sends senior editor role info.
+- `!moderator` - Sends the moderator application channel link.
+- `!payhip` - Sends MrBit's Payhip link.
+- `!presets` - Sends the presets channel link.
 - `!reloadfaq` - Reloads `config/faqs.json` after you edit it. Requires the Discord **Manage Server** permission.
 
 ## Setup
@@ -83,6 +87,14 @@ To get the channel link in Discord, right-click the overlays channel and choose 
 Set `TOPAZ_CHANNEL_URL` in `.env` or in Render's environment variables.
 
 To get the channel link in Discord, right-click the Topaz versions channel and choose **Copy Channel Link**.
+
+## Moderator Application Channel
+
+Set `MODERATOR_APPLICATION_CHANNEL_URL` in `.env` or in Render's environment variables.
+
+## Presets Channel
+
+Set `PRESETS_CHANNEL_URL` in `.env` or in Render's environment variables.
 
 ## Edge DM
 
