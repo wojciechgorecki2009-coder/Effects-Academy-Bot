@@ -1,0 +1,20 @@
+[
+  {
+    "id": "rules",
+    "question": "Where can I read the server rules?",
+    "answer": "You can read the rules in the #rules channel. Please check them before posting so everyone has a good time here.",
+    "aliases": ["rule", "server rules", "guidelines"]
+  },
+  {
+    "id": "verify",
+    "question": "How do I verify?",
+    "answer": "Go to the verification channel and follow the pinned instructions. If verification does not work, contact a moderator.",
+    "aliases": ["verification", "verified", "access"]
+  },
+  {
+    "id": "support",
+    "question": "How do I get help from staff?",
+    "answer": "Open a support ticket or message the moderation team if tickets are unavailable. Include screenshots or details so staff can help faster.",
+    "aliases": ["help", "ticket", "staff", "mod"]
+  }
+]

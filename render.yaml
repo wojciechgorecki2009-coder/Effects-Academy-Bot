@@ -1,0 +1,12 @@
+services:
+  - type: worker
+    name: discord-faq-bot
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PREFIX
+        value: "!"
+      - key: DISCORD_TOKEN
+        sync: false
