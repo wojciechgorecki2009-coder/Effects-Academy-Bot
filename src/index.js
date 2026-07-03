@@ -10,6 +10,7 @@ const {
 } = require("discord.js");
 
 const prefix = process.env.PREFIX || "!";
+const overlaysChannelUrl = process.env.OVERLAYS_CHANNEL_URL || "";
 const faqsPath = path.join(__dirname, "..", "config", "faqs.json");
 
 let faqs = loadFaqs();
@@ -55,6 +56,11 @@ client.on("messageCreate", async (message) => {
 
     if (command === "ask" || command === "question") {
       await handleAskCommand(message, query);
+      return;
+    }
+
+    if (command === "overlays" || command === "overlay") {
+      await handleOverlaysCommand(message);
       return;
     }
 
@@ -125,6 +131,15 @@ async function handleAskCommand(message, query) {
   await message.reply(formatFaqAnswer(faq));
 }
 
+async function handleOverlaysCommand(message) {
+  if (!overlaysChannelUrl) {
+    await message.reply("The overlays channel link has not been configured yet.");
+    return;
+  }
+
+  await message.reply(`You can find the overlays here: ${overlaysChannelUrl}`);
+}
+
 async function handleReloadCommand(message) {
   if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
     await message.reply("Only server managers can reload the FAQ list.");
@@ -143,6 +158,7 @@ function buildHelpMessage() {
     `\`${prefix}faq\` - List all FAQ topics.`,
     `\`${prefix}faq <topic>\` - Show an answer by topic or alias.`,
     `\`${prefix}ask <question>\` - Search the FAQ answers using a normal question.`,
+    `\`${prefix}overlays\` - Get the overlays channel link.`,
     `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
   ].join("\n");
 }
