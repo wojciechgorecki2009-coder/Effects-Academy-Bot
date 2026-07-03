@@ -10,5 +10,7 @@ services:
         value: "!"
       - key: OVERLAYS_CHANNEL_URL
         sync: false
+      - key: TOPAZ_CHANNEL_URL
+        sync: false
       - key: DISCORD_TOKEN
         sync: false
