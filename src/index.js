@@ -12,8 +12,11 @@ const {
 const prefix = process.env.PREFIX || "!";
 const overlaysChannelUrl = process.env.OVERLAYS_CHANNEL_URL || "";
 const topazChannelUrl = process.env.TOPAZ_CHANNEL_URL || "";
+const moderatorApplicationChannelUrl = process.env.MODERATOR_APPLICATION_CHANNEL_URL || "";
+const presetsChannelUrl = process.env.PRESETS_CHANNEL_URL || "";
 const mrbitUserId = process.env.MRBIT_USER_ID || "";
 const websiteUrl = "https://effectsacademy.com";
+const payhipUrl = "https://payhip.com/MrBitEdits";
 const youtubeUrl = "https://www.youtube.com/channel/UCfU49lYtzyIwKfE6gvaKL-w";
 const tiktokUrl = "https://www.tiktok.com/@mrbit_edits";
 const nexloTiktokUrl = "https://www.tiktok.com/@nexlo_ae";
@@ -30,6 +33,12 @@ const marvelMessage =
 
 const wavMessage =
   "There is no point uploading wave audios (yes wav's are better in terms of quality) not for editing if your going to render, export and then upload an edit in wav by the time it gets compressed into tiktok there is almost no to little difference to mp3. Wav is almost 30x bigger than mp3 for little to no benefit. Literally waste of space if you intending to upload the audio in a edit to tiktok. Shit will get compressed anyway";
+
+const seniorEditorMessage =
+  "You **cannot** get the senior editor role by begging gng \ud83e\udd40 We only give it to people who are genuinely goated editors and deserve the recognition for their work, in simple terms make genuine good edit that stands out and impresses us and you will get it (asking us for it constantly guarantees you not to get it";
+
+const moderatorApplicationNote =
+  "We don't really that many mods your application most likely will be declined or be accepted when there is need for more moderators";
 
 const pcMessage = [
   "CPU - Ryzen 5 5600",
@@ -140,6 +149,26 @@ client.on("messageCreate", async (message) => {
       return;
     }
 
+    if (command === "senioreditor" || command === "senior") {
+      await message.reply(seniorEditorMessage);
+      return;
+    }
+
+    if (command === "moderator" || command === "mod") {
+      await handleModeratorCommand(message);
+      return;
+    }
+
+    if (command === "payhip") {
+      await message.reply(`MrBit's Payhip: ${payhipUrl}`);
+      return;
+    }
+
+    if (command === "presets" || command === "preset") {
+      await handlePresetsCommand(message);
+      return;
+    }
+
     if (command === "reloadfaq" || command === "reloadfaqs") {
       await handleReloadCommand(message);
       return;
@@ -225,6 +254,24 @@ async function handleTopazCommand(message) {
   await message.reply(`You can find the Topaz versions here: ${topazChannelUrl}`);
 }
 
+async function handleModeratorCommand(message) {
+  if (!moderatorApplicationChannelUrl) {
+    await message.reply("The moderator application channel link has not been configured yet.");
+    return;
+  }
+
+  await message.reply(`${moderatorApplicationNote}\n${moderatorApplicationChannelUrl}`);
+}
+
+async function handlePresetsCommand(message) {
+  if (!presetsChannelUrl) {
+    await message.reply("The presets channel link has not been configured yet.");
+    return;
+  }
+
+  await message.reply(`You can find the presets here: ${presetsChannelUrl}`);
+}
+
 async function handleEdgeCommand(message) {
   await message.reply(pickRandom(edgeReplies));
 
@@ -270,6 +317,10 @@ function buildHelpMessage() {
     `\`${prefix}nexlo\` - Get Nexlo's TikTok link.`,
     `\`${prefix}iusethis\` - Get iusethis's TikTok link.`,
     `\`${prefix}pc\` - Get MrBit's PC specs.`,
+    `\`${prefix}senioreditor\` - Get senior editor role info.`,
+    `\`${prefix}moderator\` - Get the moderator application link.`,
+    `\`${prefix}payhip\` - Get MrBit's Payhip link.`,
+    `\`${prefix}presets\` - Get the presets channel link.`,
     `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
   ].join("\n");
 }
