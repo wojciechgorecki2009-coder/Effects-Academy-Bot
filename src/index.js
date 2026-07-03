@@ -160,6 +160,11 @@ client.on("messageCreate", async (message) => {
       return;
     }
 
+    if (command === "members" || command === "membercount") {
+      await handleMembersCommand(message);
+      return;
+    }
+
     if (command === "senioreditor" || command === "senior") {
       await message.reply(seniorEditorMessage);
       return;
@@ -319,6 +324,16 @@ async function handleReloadCommand(message) {
   await message.reply(`Reloaded ${faqs.length} FAQ entries.`);
 }
 
+async function handleMembersCommand(message) {
+  if (!message.guild) {
+    await message.reply("This command only works in a server.");
+    return;
+  }
+
+  const guild = await message.guild.fetch();
+  await message.reply(`**${guild.memberCount}**`);
+}
+
 function buildHelpMessage() {
   return [
     `Commands start with \`${prefix}\`.`,
@@ -339,6 +354,7 @@ function buildHelpMessage() {
     `\`${prefix}iusethis\` - Get iusethis's TikTok link.`,
     `\`${prefix}pc\` - Get MrBit's PC specs.`,
     `\`${prefix}laptop\` - Get iusethis's laptop note.`,
+    `\`${prefix}members\` - Get the server member count.`,
     `\`${prefix}senioreditor\` - Get senior editor role info.`,
     `\`${prefix}moderator\` - Get the moderator application link.`,
     `\`${prefix}payhip\` - Get MrBit's Payhip link.`,
@@ -381,6 +397,7 @@ function buildCommandMenuEmbed() {
         value: [
           `\`${prefix}pc\``,
           `\`${prefix}laptop\``,
+          `\`${prefix}members\``,
           `\`${prefix}senioreditor\``,
           `\`${prefix}marvel\``,
           `\`${prefix}wav\``
