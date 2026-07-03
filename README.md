@@ -23,6 +23,8 @@ A small Discord bot for answering common server questions with commands that sta
 - `!moderator` - Sends the moderator application channel link.
 - `!payhip` - Sends MrBit's Payhip link.
 - `!presets` - Sends the presets channel link.
+- `!programs` - Sends the programs website link.
+- `!ifg` - Sends the IFG reply.
 - `!reloadfaq` - Reloads `config/faqs.json` after you edit it. Requires the Discord **Manage Server** permission.
 
 ## Setup
