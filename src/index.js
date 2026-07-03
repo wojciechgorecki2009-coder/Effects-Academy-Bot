@@ -12,7 +12,12 @@ const {
 const prefix = process.env.PREFIX || "!";
 const overlaysChannelUrl = process.env.OVERLAYS_CHANNEL_URL || "";
 const topazChannelUrl = process.env.TOPAZ_CHANNEL_URL || "";
+const mrbitUserId = process.env.MRBIT_USER_ID || "";
 const websiteUrl = "https://effectsacademy.com";
+const youtubeUrl = "https://www.youtube.com/channel/UCfU49lYtzyIwKfE6gvaKL-w";
+const tiktokUrl = "https://www.tiktok.com/@mrbit_edits";
+const nexloTiktokUrl = "https://www.tiktok.com/@nexlo_ae";
+const iusethisTiktokUrl = "https://www.tiktok.com/@.iusethis";
 const faqsPath = path.join(__dirname, "..", "config", "faqs.json");
 
 const edgeReplies = [
@@ -24,7 +29,7 @@ const marvelMessage =
   "MrBIt dislikes marvel because its a cancer for the film industry as any time they release a film every indie movie or any other good movie that comes out during their \"release date\" gets blown out of the water, its like gta 6 every year for the industry. Since Disney bought them they're stories have been getting more stale every release they do, since end game they backed them selves into a corner cause they ended the Avengers Story there and now have nothing else to make expect slop content to keep the investors happy, Also to add their characters are super 1 dimensional every character is basically the same thing without any meaningful development. If you take Marvel and compare it to yt its like MrBeast, anything to keep you watching and super condensed and plain content without any real personality behind it. Past the age of 12 everyone should see through their garbage";
 
 const wavMessage =
-  "There is no point uploading wav audios (yes wav's are better in terms of quality) not for editing if your going to render, export and then upload an edit in wav. By the time it gets compressed into tiktok there is almost no to little difference to mp3. Wav is almost 30x bigger than mp3 for little to no benefit. Literally waste of space if you intending to upload the audio in a edit to tiktok. Shit will get compressed anyway";
+  "There is no point uploading wave audios (yes wav's are better in terms of quality) not for editing if your going to render, export and then upload an edit in wav by the time it gets compressed into tiktok there is almost no to little difference to mp3. Wav is almost 30x bigger than mp3 for little to no benefit. Literally waste of space if you intending to upload the audio in a edit to tiktok. Shit will get compressed anyway";
 
 let faqs = loadFaqs();
 
@@ -83,7 +88,7 @@ client.on("messageCreate", async (message) => {
     }
 
     if (command === "edge") {
-      await message.reply(pickRandom(edgeReplies));
+      await handleEdgeCommand(message);
       return;
     }
 
@@ -99,6 +104,26 @@ client.on("messageCreate", async (message) => {
 
     if (command === "website" || command === "site") {
       await message.reply(`Official Effects Academy website: ${websiteUrl}`);
+      return;
+    }
+
+    if (command === "youtube" || command === "yt") {
+      await message.reply(`MrBitEdits YouTube: ${youtubeUrl}`);
+      return;
+    }
+
+    if (command === "tiktok" || command === "tt") {
+      await message.reply(`MrBitEdits TikTok: ${tiktokUrl}`);
+      return;
+    }
+
+    if (command === "nexlo") {
+      await message.reply(`Nexlo's TikTok: ${nexloTiktokUrl}`);
+      return;
+    }
+
+    if (command === "iusethis") {
+      await message.reply(`iusethis's TikTok: ${iusethisTiktokUrl}`);
       return;
     }
 
@@ -187,6 +212,22 @@ async function handleTopazCommand(message) {
   await message.reply(`You can find the Topaz versions here: ${topazChannelUrl}`);
 }
 
+async function handleEdgeCommand(message) {
+  await message.reply(pickRandom(edgeReplies));
+
+  if (!mrbitUserId) {
+    console.warn("MRBIT_USER_ID is not configured; skipping edge DM.");
+    return;
+  }
+
+  try {
+    const user = await client.users.fetch(mrbitUserId);
+    await user.send("someone told me to edge btw \u270c\ufe0f can we ban him?");
+  } catch (error) {
+    console.error("Could not send edge DM:", error);
+  }
+}
+
 async function handleReloadCommand(message) {
   if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
     await message.reply("Only server managers can reload the FAQ list.");
@@ -211,6 +252,10 @@ function buildHelpMessage() {
     `\`${prefix}marvel\` - Get MrBIt's Marvel take.`,
     `\`${prefix}wav\` - Get the WAV audio note.`,
     `\`${prefix}website\` - Get the official website link.`,
+    `\`${prefix}youtube\` - Get the MrBitEdits YouTube link.`,
+    `\`${prefix}tiktok\` - Get the MrBitEdits TikTok link.`,
+    `\`${prefix}nexlo\` - Get Nexlo's TikTok link.`,
+    `\`${prefix}iusethis\` - Get iusethis's TikTok link.`,
     `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
   ].join("\n");
 }
