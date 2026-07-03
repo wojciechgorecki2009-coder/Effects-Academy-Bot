@@ -12,5 +12,7 @@ services:
         sync: false
       - key: TOPAZ_CHANNEL_URL
         sync: false
+      - key: MRBIT_USER_ID
+        sync: false
       - key: DISCORD_TOKEN
         sync: false
