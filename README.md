@@ -19,6 +19,7 @@ A small Discord bot for answering common server questions with commands that sta
 - `!nexlo` - Sends Nexlo's TikTok link.
 - `!iusethis` - Sends iusethis's TikTok link.
 - `!pc` - Sends MrBit's PC specs.
+- `!laptop` - Sends iusethis's laptop note.
 - `!senioreditor` - Sends senior editor role info.
 - `!moderator` - Sends the moderator application channel link.
 - `!payhip` - Sends MrBit's Payhip link.
