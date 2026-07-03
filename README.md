@@ -9,6 +9,11 @@ A small Discord bot for answering common server questions with commands that sta
 - `!faq rules` - Shows a specific FAQ answer.
 - `!ask how do I verify` - Searches the FAQ list using a normal question.
 - `!overlays` - Sends users the overlays channel link.
+- `!topaz` - Sends users the Topaz versions channel link.
+- `!edge` - Sends a random edge reply.
+- `!marvel` - Sends MrBIt's Marvel take.
+- `!wav` - Sends the WAV audio note.
+- `!website` - Sends the official Effects Academy website link.
 - `!reloadfaq` - Reloads `config/faqs.json` after you edit it. Requires the Discord **Manage Server** permission.
 
 ## Setup
@@ -67,3 +72,9 @@ Then commands would start with `?` instead of `!`.
 Set `OVERLAYS_CHANNEL_URL` in `.env` or in Render's environment variables.
 
 To get the channel link in Discord, right-click the overlays channel and choose **Copy Channel Link**.
+
+## Topaz Channel
+
+Set `TOPAZ_CHANNEL_URL` in `.env` or in Render's environment variables.
+
+To get the channel link in Discord, right-click the Topaz versions channel and choose **Copy Channel Link**.
