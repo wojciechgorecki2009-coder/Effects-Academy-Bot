@@ -17,6 +17,7 @@ const presetsChannelUrl = process.env.PRESETS_CHANNEL_URL || "";
 const mrbitUserId = process.env.MRBIT_USER_ID || "";
 const websiteUrl = "https://effectsacademy.com";
 const payhipUrl = "https://payhip.com/MrBitEdits";
+const programsUrl = "https://satvrn.li";
 const youtubeUrl = "https://www.youtube.com/channel/UCfU49lYtzyIwKfE6gvaKL-w";
 const tiktokUrl = "https://www.tiktok.com/@mrbit_edits";
 const nexloTiktokUrl = "https://www.tiktok.com/@nexlo_ae";
@@ -166,6 +167,16 @@ client.on("messageCreate", async (message) => {
 
     if (command === "presets" || command === "preset") {
       await handlePresetsCommand(message);
+      return;
+    }
+
+    if (command === "programs") {
+      await message.reply(`After Effects, Premiere, and other programs: ${programsUrl}`);
+      return;
+    }
+
+    if (command === "ifg") {
+      await message.reply("I fucking guess \ud83e\udd40");
       return;
     }
 
@@ -321,6 +332,8 @@ function buildHelpMessage() {
     `\`${prefix}moderator\` - Get the moderator application link.`,
     `\`${prefix}payhip\` - Get MrBit's Payhip link.`,
     `\`${prefix}presets\` - Get the presets channel link.`,
+    `\`${prefix}programs\` - Get the programs website link.`,
+    `\`${prefix}ifg\` - Get the IFG reply.`,
     `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
   ].join("\n");
 }
