@@ -331,7 +331,7 @@ async function handleMembersCommand(message) {
   }
 
   const guild = await message.guild.fetch();
-  await message.reply(`**${guild.memberCount}**`);
+  await message.reply(`Server member count **${guild.memberCount}**`);
 }
 
 function buildHelpMessage() {
