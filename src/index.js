@@ -11,7 +11,20 @@ const {
 
 const prefix = process.env.PREFIX || "!";
 const overlaysChannelUrl = process.env.OVERLAYS_CHANNEL_URL || "";
+const topazChannelUrl = process.env.TOPAZ_CHANNEL_URL || "";
+const websiteUrl = "https://effectsacademy.com";
 const faqsPath = path.join(__dirname, "..", "config", "faqs.json");
+
+const edgeReplies = [
+  "haha so funny let me dm mrbit \u270c\ufe0f",
+  "this isn't funny king \ud83d\ude29"
+];
+
+const marvelMessage =
+  "MrBIt dislikes marvel because its a cancer for the film industry as any time they release a film every indie movie or any other good movie that comes out during their \"release date\" gets blown out of the water, its like gta 6 every year for the industry. Since Disney bought them they're stories have been getting more stale every release they do, since end game they backed them selves into a corner cause they ended the Avengers Story there and now have nothing else to make expect slop content to keep the investors happy, Also to add their characters are super 1 dimensional every character is basically the same thing without any meaningful development. If you take Marvel and compare it to yt its like MrBeast, anything to keep you watching and super condensed and plain content without any real personality behind it. Past the age of 12 everyone should see through their garbage";
+
+const wavMessage =
+  "There is no point uploading wave audios (yes wav's are better in terms of quality) not for editing if your going to render, export and then upload an edit in wav by the time it gets compressed into tiktok there is almost no to little difference to mp3. Wav is almost 30x bigger than mp3 for little to no benefit. Literally waste of space if you intending to upload the audio in a edit to tiktok. Shit will get compressed anyway";
 
 let faqs = loadFaqs();
 
@@ -61,6 +74,31 @@ client.on("messageCreate", async (message) => {
 
     if (command === "overlays" || command === "overlay") {
       await handleOverlaysCommand(message);
+      return;
+    }
+
+    if (command === "topaz") {
+      await handleTopazCommand(message);
+      return;
+    }
+
+    if (command === "edge") {
+      await message.reply(pickRandom(edgeReplies));
+      return;
+    }
+
+    if (command === "marvel") {
+      await message.reply(marvelMessage);
+      return;
+    }
+
+    if (command === "wav") {
+      await message.reply(wavMessage);
+      return;
+    }
+
+    if (command === "website" || command === "site") {
+      await message.reply(`Official Effects Academy website: ${websiteUrl}`);
       return;
     }
 
@@ -140,6 +178,15 @@ async function handleOverlaysCommand(message) {
   await message.reply(`You can find the overlays here: ${overlaysChannelUrl}`);
 }
 
+async function handleTopazCommand(message) {
+  if (!topazChannelUrl) {
+    await message.reply("The topaz versions channel link has not been configured yet.");
+    return;
+  }
+
+  await message.reply(`You can find the Topaz versions here: ${topazChannelUrl}`);
+}
+
 async function handleReloadCommand(message) {
   if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
     await message.reply("Only server managers can reload the FAQ list.");
@@ -159,8 +206,17 @@ function buildHelpMessage() {
     `\`${prefix}faq <topic>\` - Show an answer by topic or alias.`,
     `\`${prefix}ask <question>\` - Search the FAQ answers using a normal question.`,
     `\`${prefix}overlays\` - Get the overlays channel link.`,
+    `\`${prefix}topaz\` - Get the Topaz versions channel link.`,
+    `\`${prefix}edge\` - Get the edge reply.`,
+    `\`${prefix}marvel\` - Get MrBIt's Marvel take.`,
+    `\`${prefix}wav\` - Get the WAV audio note.`,
+    `\`${prefix}website\` - Get the official website link.`,
     `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
   ].join("\n");
+}
+
+function pickRandom(values) {
+  return values[Math.floor(Math.random() * values.length)];
 }
 
 function findBestFaq(query) {
