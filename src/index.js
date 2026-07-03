@@ -31,6 +31,14 @@ const marvelMessage =
 const wavMessage =
   "There is no point uploading wave audios (yes wav's are better in terms of quality) not for editing if your going to render, export and then upload an edit in wav by the time it gets compressed into tiktok there is almost no to little difference to mp3. Wav is almost 30x bigger than mp3 for little to no benefit. Literally waste of space if you intending to upload the audio in a edit to tiktok. Shit will get compressed anyway";
 
+const pcMessage = [
+  "CPU - Ryzen 5 5600",
+  "GPU - RTX 3070",
+  "RAM - 32GB DDR4",
+  "STORAGE - 2.3TB",
+  "PC Part Picker List: https://uk.pcpartpicker.com/list/KCwsph"
+].join("\n");
+
 let faqs = loadFaqs();
 
 const client = new Client({
@@ -124,6 +132,11 @@ client.on("messageCreate", async (message) => {
 
     if (command === "iusethis") {
       await message.reply(`iusethis's TikTok: ${iusethisTiktokUrl}`);
+      return;
+    }
+
+    if (command === "pc" || command === "specs") {
+      await message.reply(pcMessage);
       return;
     }
 
@@ -256,6 +269,7 @@ function buildHelpMessage() {
     `\`${prefix}tiktok\` - Get the MrBitEdits TikTok link.`,
     `\`${prefix}nexlo\` - Get Nexlo's TikTok link.`,
     `\`${prefix}iusethis\` - Get iusethis's TikTok link.`,
+    `\`${prefix}pc\` - Get MrBit's PC specs.`,
     `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
   ].join("\n");
 }
