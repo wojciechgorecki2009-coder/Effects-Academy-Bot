@@ -4,6 +4,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const {
   Client,
+  EmbedBuilder,
   GatewayIntentBits,
   Partials,
   PermissionsBitField
@@ -72,6 +73,7 @@ client.on("messageCreate", async (message) => {
 
   const withoutPrefix = message.content.slice(prefix.length).trim();
   if (!withoutPrefix) {
+    await message.reply({ embeds: [buildCommandMenuEmbed()] });
     return;
   }
 
@@ -81,7 +83,7 @@ client.on("messageCreate", async (message) => {
 
   try {
     if (command === "help" || command === "commands") {
-      await message.reply(buildHelpMessage());
+      await message.reply({ embeds: [buildCommandMenuEmbed()] });
       return;
     }
 
@@ -336,6 +338,60 @@ function buildHelpMessage() {
     `\`${prefix}ifg\` - Get the IFG reply.`,
     `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
   ].join("\n");
+}
+
+function buildCommandMenuEmbed() {
+  return new EmbedBuilder()
+    .setTitle("Effects Academy Bot Commands")
+    .setDescription(`Use commands with the \`${prefix}\` prefix.`)
+    .setColor(0x8b5cf6)
+    .addFields(
+      {
+        name: "Channel Links",
+        value: [
+          `\`${prefix}overlays\``,
+          `\`${prefix}topaz\``,
+          `\`${prefix}moderator\``,
+          `\`${prefix}presets\``
+        ].join(" ")
+      },
+      {
+        name: "Links",
+        value: [
+          `\`${prefix}website\``,
+          `\`${prefix}youtube\``,
+          `\`${prefix}tiktok\``,
+          `\`${prefix}nexlo\``,
+          `\`${prefix}iusethis\``,
+          `\`${prefix}payhip\``,
+          `\`${prefix}programs\``
+        ].join(" ")
+      },
+      {
+        name: "Info",
+        value: [
+          `\`${prefix}pc\``,
+          `\`${prefix}senioreditor\``,
+          `\`${prefix}marvel\``,
+          `\`${prefix}wav\``
+        ].join(" ")
+      },
+      {
+        name: "Fun",
+        value: [
+          `\`${prefix}edge\``,
+          `\`${prefix}ifg\``
+        ].join(" ")
+      },
+      {
+        name: "FAQ",
+        value: [
+          `\`${prefix}faq\``,
+          `\`${prefix}faq <topic>\``,
+          `\`${prefix}ask <question>\``
+        ].join(" ")
+      }
+    );
 }
 
 function pickRandom(values) {
