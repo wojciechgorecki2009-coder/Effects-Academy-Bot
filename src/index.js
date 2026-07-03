@@ -50,6 +50,9 @@ const pcMessage = [
   "PC Part Picker List: https://uk.pcpartpicker.com/list/KCwsph"
 ].join("\n");
 
+const laptopMessage =
+  "Iusethis's laptop doesn't deserve a command lets be honest it uses a laptop gpu its just buns \ud83e\udd40";
+
 let faqs = loadFaqs();
 
 const client = new Client({
@@ -149,6 +152,11 @@ client.on("messageCreate", async (message) => {
 
     if (command === "pc" || command === "specs") {
       await message.reply(pcMessage);
+      return;
+    }
+
+    if (command === "laptop") {
+      await message.reply(laptopMessage);
       return;
     }
 
@@ -330,6 +338,7 @@ function buildHelpMessage() {
     `\`${prefix}nexlo\` - Get Nexlo's TikTok link.`,
     `\`${prefix}iusethis\` - Get iusethis's TikTok link.`,
     `\`${prefix}pc\` - Get MrBit's PC specs.`,
+    `\`${prefix}laptop\` - Get iusethis's laptop note.`,
     `\`${prefix}senioreditor\` - Get senior editor role info.`,
     `\`${prefix}moderator\` - Get the moderator application link.`,
     `\`${prefix}payhip\` - Get MrBit's Payhip link.`,
@@ -371,6 +380,7 @@ function buildCommandMenuEmbed() {
         name: "Info",
         value: [
           `\`${prefix}pc\``,
+          `\`${prefix}laptop\``,
           `\`${prefix}senioreditor\``,
           `\`${prefix}marvel\``,
           `\`${prefix}wav\``
