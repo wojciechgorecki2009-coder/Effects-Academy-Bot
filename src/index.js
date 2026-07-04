@@ -214,7 +214,17 @@ client.on("messageCreate", async (message) => {
 });
 
 function loadFaqs() {
+  if (!fs.existsSync(faqsPath)) {
+    console.warn("config/faqs.json is missing; starting with no FAQ entries.");
+    return [];
+  }
+
   const raw = fs.readFileSync(faqsPath, "utf8");
+  if (!raw.trim()) {
+    console.warn("config/faqs.json is empty; starting with no FAQ entries.");
+    return [];
+  }
+
   const loadedFaqs = JSON.parse(raw);
 
   if (!Array.isArray(loadedFaqs)) {
