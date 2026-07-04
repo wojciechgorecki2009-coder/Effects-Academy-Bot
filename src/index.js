@@ -33,10 +33,13 @@ const edgeReplies = [
   "This is starting to hurt my digital feelings. I am literally begging you to develop one new bit.",
   "Stop. The joke is cooked, the usage joke is cooked, and your moral compass is buffering.",
   "You keep pressing this command like it owes you money. It does not. Stop spamming.",
-  "Final warning: every extra !edge is another confession that you have no fresh material."
+  "Final warning: every extra !edge is another confession that you have no fresh material.",
+  "I'm spending more usage on you \u270c\ufe0f",
+  "No"
 ];
 const edgeSpamCounts = new Map();
 const edgeSpamWindowMs = 10 * 60 * 1000;
+const edgeLockoutMs = 10 * 60 * 1000;
 
 const marvelMessage =
   "MrBIt dislikes marvel because its a cancer for the film industry as any time they release a film every indie movie or any other good movie that comes out during their \"release date\" gets blown out of the water, its like gta 6 every year for the industry. Since Disney bought them they're stories have been getting more stale every release they do, since end game they backed them selves into a corner cause they ended the Avengers Story there and now have nothing else to make expect slop content to keep the investors happy, Also to add their characters are super 1 dimensional every character is basically the same thing without any meaningful development. If you take Marvel and compare it to yt its like MrBeast, anything to keep you watching and super condensed and plain content without any real personality behind it. Past the age of 12 everyone should see through their garbage";
@@ -317,7 +320,12 @@ async function handlePresetsCommand(message) {
 }
 
 async function handleEdgeCommand(message) {
-  await message.reply(getEdgeReply(message.author.id));
+  const edgeReply = getEdgeReply(message.author.id);
+  await message.reply(edgeReply.content);
+
+  if (!edgeReply.shouldDmMrBit) {
+    return;
+  }
 
   if (!mrbitUserId) {
     console.warn("MRBIT_USER_ID is not configured; skipping edge DM.");
@@ -335,17 +343,30 @@ async function handleEdgeCommand(message) {
 function getEdgeReply(userId) {
   const now = Date.now();
   const existing = edgeSpamCounts.get(userId);
+
+  if (existing?.blockedUntil && now < existing.blockedUntil) {
+    return { content: "No", shouldDmMrBit: false };
+  }
+
   const count = existing && now - existing.lastUsedAt < edgeSpamWindowMs
     ? existing.count + 1
     : 1;
 
-  edgeSpamCounts.set(userId, { count, lastUsedAt: now });
+  const isLockout = count >= edgeReplies.length;
+  edgeSpamCounts.set(userId, {
+    count,
+    lastUsedAt: now,
+    blockedUntil: isLockout ? now + edgeLockoutMs : 0
+  });
 
   if (count === 1) {
-    return pickRandom(edgeReplies.slice(0, 2));
+    return { content: pickRandom(edgeReplies.slice(0, 2)), shouldDmMrBit: true };
   }
 
-  return edgeReplies[Math.min(count, edgeReplies.length) - 1];
+  return {
+    content: edgeReplies[Math.min(count, edgeReplies.length) - 1],
+    shouldDmMrBit: !isLockout
+  };
 }
 
 async function handleReloadCommand(message) {
