@@ -58,7 +58,7 @@ const pcMessage = [
   "GPU - RTX 3070",
   "RAM - 32GB DDR4",
   "STORAGE - 2.3TB",
-  "PC Part Picker List: https://uk.pcpartpicker.com/list/KCwsph"
+  "PC Part Picker List: https://uk.pcpartpicker.com/list/C26GJw"
 ].join("\n");
 
 const laptopMessage =
