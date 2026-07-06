@@ -6,11 +6,11 @@ const {
   Client,
   EmbedBuilder,
   GatewayIntentBits,
-  Partials,
-  PermissionsBitField
+  PermissionsBitField,
+  SlashCommandBuilder
 } = require("discord.js");
 
-const prefix = process.env.PREFIX || "!";
+const guildId = process.env.GUILD_ID || "";
 const overlaysChannelUrl = process.env.OVERLAYS_CHANNEL_URL || "";
 const topazChannelUrl = process.env.TOPAZ_CHANNEL_URL || "";
 const moderatorApplicationChannelUrl = process.env.MODERATOR_APPLICATION_CHANNEL_URL || "";
@@ -23,6 +23,7 @@ const competitionManagerRoleIds = (process.env.COMP_MANAGER_ROLE_IDS || "")
   .split(",")
   .map((roleId) => roleId.trim())
   .filter(Boolean);
+
 const websiteUrl = "https://effectsacademy.com";
 const payhipUrl = "https://payhip.com/MrBitEdits";
 const programsUrl = "https://keyfla.me/windows";
@@ -41,7 +42,7 @@ const edgeReplies = [
   "This is starting to hurt my digital feelings. I am literally begging you to develop one new bit.",
   "Stop. The joke is cooked, the usage joke is cooked, and your moral compass is buffering.",
   "You keep pressing this command like it owes you money. It does not. Stop spamming.",
-  "Final warning: every extra !edge is another confession that you have no fresh material.",
+  "Final warning: every extra /edge is another confession that you have no fresh material.",
   "I'm spending more usage on you \u270c\ufe0f",
   "No"
 ];
@@ -77,187 +78,34 @@ let faqs = loadFaqs();
 let competitionState = loadCompetitionState();
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ],
-  partials: [Partials.Channel]
+  intents: [GatewayIntentBits.Guilds]
 });
 
-client.once("ready", () => {
+const slashCommands = buildSlashCommands();
+
+client.once("ready", async () => {
   console.log(`Logged in as ${client.user.tag}`);
-  console.log(`Using command prefix: ${prefix}`);
-});
-
-client.on("messageCreate", async (message) => {
-  if (message.author.bot || !message.content.startsWith(prefix)) {
-    return;
-  }
-
-  const withoutPrefix = message.content.slice(prefix.length).trim();
-  if (!withoutPrefix) {
-    await message.reply({ embeds: [buildCommandMenuEmbed()] });
-    return;
-  }
-
-  const [commandName, ...args] = withoutPrefix.split(/\s+/);
-  const command = commandName.toLowerCase();
-  const query = args.join(" ").trim();
 
   try {
-    if (command === "help" || command === "commands") {
-      await message.reply({ embeds: [buildCommandMenuEmbed()] });
-      return;
-    }
+    await registerSlashCommands();
+  } catch (error) {
+    console.error("Could not register slash commands:", error);
+  }
+});
 
-    if (command === "faq" || command === "faqs") {
-      await handleFaqCommand(message, query);
-      return;
-    }
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isChatInputCommand()) {
+    return;
+  }
 
-    if (command === "ask" || command === "question") {
-      await handleAskCommand(message, query);
-      return;
-    }
-
-    if (command === "overlays" || command === "overlay") {
-      await handleOverlaysCommand(message);
-      return;
-    }
-
-    if (command === "topaz") {
-      await handleTopazCommand(message);
-      return;
-    }
-
-    if (command === "rules") {
-      await handleRulesCommand(message);
-      return;
-    }
-
-    if (command === "audios" || command === "audio") {
-      await handleAudiosCommand(message);
-      return;
-    }
-
-    if (command === "coinflip" || command === "flipcoin") {
-      await message.reply(`The coin landed on **${pickRandom(["heads", "tails"])}**.`);
-      return;
-    }
-
-    if (command === "comp" || command === "competition") {
-      await handleCompetitionCommand(message);
-      return;
-    }
-
-    if (command === "setcomp") {
-      await handleSetCompetitionCommand(message);
-      return;
-    }
-
-    if (command === "endcomp") {
-      await handleEndCompetitionCommand(message);
-      return;
-    }
-
-    if (command === "servermessage" || command === "announce") {
-      await handleServerMessageCommand(message, query);
-      return;
-    }
-
-    if (command === "edge") {
-      await handleEdgeCommand(message);
-      return;
-    }
-
-    if (command === "marvel") {
-      await message.reply(marvelMessage);
-      return;
-    }
-
-    if (command === "wav") {
-      await message.reply(wavMessage);
-      return;
-    }
-
-    if (command === "website" || command === "site") {
-      await message.reply(`Official Effects Academy website: ${websiteUrl}`);
-      return;
-    }
-
-    if (command === "youtube" || command === "yt") {
-      await message.reply(`MrBitEdits YouTube: ${youtubeUrl}`);
-      return;
-    }
-
-    if (command === "tiktok" || command === "tt") {
-      await message.reply(`MrBitEdits TikTok: ${tiktokUrl}`);
-      return;
-    }
-
-    if (command === "nexlo") {
-      await message.reply(`Nexlo's TikTok: ${nexloTiktokUrl}`);
-      return;
-    }
-
-    if (command === "iusethis") {
-      await message.reply(`iusethis's TikTok: ${iusethisTiktokUrl}`);
-      return;
-    }
-
-    if (command === "pc" || command === "specs") {
-      await message.reply(pcMessage);
-      return;
-    }
-
-    if (command === "laptop") {
-      await message.reply(laptopMessage);
-      return;
-    }
-
-    if (command === "members" || command === "membercount") {
-      await handleMembersCommand(message);
-      return;
-    }
-
-    if (command === "senioreditor" || command === "senior") {
-      await message.reply(seniorEditorMessage);
-      return;
-    }
-
-    if (command === "moderator" || command === "mod") {
-      await handleModeratorCommand(message);
-      return;
-    }
-
-    if (command === "payhip") {
-      await message.reply(`MrBit's Payhip: ${payhipUrl}`);
-      return;
-    }
-
-    if (command === "presets" || command === "preset") {
-      await handlePresetsCommand(message);
-      return;
-    }
-
-    if (command === "programs") {
-      await message.reply(`After Effects, Premiere, and other programs: ${programsUrl}`);
-      return;
-    }
-
-    if (command === "ifg") {
-      await message.reply("I fucking guess \ud83e\udd40");
-      return;
-    }
-
-    if (command === "reloadfaq" || command === "reloadfaqs") {
-      await handleReloadCommand(message);
-      return;
-    }
+  try {
+    await handleSlashCommand(interaction);
   } catch (error) {
     console.error(error);
-    await message.reply("Something went wrong while handling that command.");
+    await replyToInteraction(interaction, {
+      content: "Something went wrong while handling that command.",
+      ephemeral: true
+    });
   }
 });
 
@@ -274,7 +122,6 @@ function loadFaqs() {
   }
 
   const loadedFaqs = JSON.parse(raw);
-
   if (!Array.isArray(loadedFaqs)) {
     throw new Error("config/faqs.json must contain an array of FAQ entries.");
   }
@@ -316,140 +163,181 @@ function saveCompetitionState(state) {
   fs.writeFileSync(competitionStatePath, `${JSON.stringify(state, null, 2)}\n`);
 }
 
-async function handleFaqCommand(message, query) {
+async function registerSlashCommands() {
+  if (guildId) {
+    const guild = await client.guilds.fetch(guildId);
+    await guild.commands.set(slashCommands);
+    console.log(`Registered ${slashCommands.length} slash commands for guild ${guildId}.`);
+    return;
+  }
+
+  await client.application.commands.set(slashCommands);
+  console.log(`Registered ${slashCommands.length} global slash commands.`);
+}
+
+function buildSlashCommands() {
+  return [
+    new SlashCommandBuilder().setName("help").setDescription("Show the bot command menu"),
+    new SlashCommandBuilder()
+      .setName("faq")
+      .setDescription("Show FAQ topics or a specific FAQ answer")
+      .addStringOption((option) =>
+        option.setName("topic").setDescription("FAQ topic or alias").setRequired(false)
+      ),
+    new SlashCommandBuilder()
+      .setName("ask")
+      .setDescription("Search the FAQ with a normal question")
+      .addStringOption((option) =>
+        option.setName("question").setDescription("Question to search for").setRequired(true)
+      ),
+    new SlashCommandBuilder().setName("overlays").setDescription("Get the overlays channel link"),
+    new SlashCommandBuilder().setName("topaz").setDescription("Get the Topaz versions channel link"),
+    new SlashCommandBuilder().setName("rules").setDescription("Get the rules channel link"),
+    new SlashCommandBuilder().setName("audios").setDescription("Get the audios channel link"),
+    new SlashCommandBuilder().setName("coinflip").setDescription("Flip a coin"),
+    new SlashCommandBuilder().setName("comp").setDescription("Show the current editing competition"),
+    new SlashCommandBuilder()
+      .setName("setcomp")
+      .setDescription("Set and announce an editing competition")
+      .addStringOption((option) => option.setName("date_from").setDescription("Start date").setRequired(true))
+      .addStringOption((option) => option.setName("date_to").setDescription("End date").setRequired(true))
+      .addStringOption((option) => option.setName("prize").setDescription("Competition prize").setRequired(true))
+      .addStringOption((option) => option.setName("description").setDescription("Competition description").setRequired(true))
+      .addStringOption((option) => option.setName("name").setDescription("Competition name").setRequired(true))
+      .addStringOption((option) => option.setName("rules").setDescription("Competition rules").setRequired(true)),
+    new SlashCommandBuilder().setName("endcomp").setDescription("End the current editing competition"),
+    new SlashCommandBuilder()
+      .setName("servermessage")
+      .setDescription("Send a message to the announcement channel")
+      .addStringOption((option) =>
+        option.setName("message").setDescription("Message to send").setRequired(true)
+      ),
+    new SlashCommandBuilder().setName("edge").setDescription("Get the edge reply"),
+    new SlashCommandBuilder().setName("marvel").setDescription("Get MrBIt's Marvel take"),
+    new SlashCommandBuilder().setName("wav").setDescription("Get the WAV audio note"),
+    new SlashCommandBuilder().setName("website").setDescription("Get the official website link"),
+    new SlashCommandBuilder().setName("youtube").setDescription("Get the MrBitEdits YouTube link"),
+    new SlashCommandBuilder().setName("tiktok").setDescription("Get the MrBitEdits TikTok link"),
+    new SlashCommandBuilder().setName("nexlo").setDescription("Get Nexlo's TikTok link"),
+    new SlashCommandBuilder().setName("iusethis").setDescription("Get iusethis's TikTok link"),
+    new SlashCommandBuilder().setName("pc").setDescription("Get MrBit's PC specs"),
+    new SlashCommandBuilder().setName("laptop").setDescription("Get iusethis's laptop note"),
+    new SlashCommandBuilder().setName("members").setDescription("Get the server member count"),
+    new SlashCommandBuilder().setName("senioreditor").setDescription("Get senior editor role info"),
+    new SlashCommandBuilder().setName("moderator").setDescription("Get the moderator application link"),
+    new SlashCommandBuilder().setName("payhip").setDescription("Get MrBit's Payhip link"),
+    new SlashCommandBuilder().setName("presets").setDescription("Get the presets channel link"),
+    new SlashCommandBuilder().setName("programs").setDescription("Get the programs website link"),
+    new SlashCommandBuilder().setName("ifg").setDescription("Get the IFG reply"),
+    new SlashCommandBuilder().setName("reloadfaq").setDescription("Reload FAQ entries")
+  ].map((command) => command.toJSON());
+}
+
+async function handleSlashCommand(interaction) {
+  const commandHandlers = {
+    help: handleHelpCommand,
+    faq: handleFaqCommand,
+    ask: handleAskCommand,
+    overlays: () => replyWithConfiguredLink(interaction, overlaysChannelUrl, "overlays"),
+    topaz: () => replyWithConfiguredLink(interaction, topazChannelUrl, "Topaz versions"),
+    rules: () => replyWithConfiguredLink(interaction, rulesChannelUrl, "rules"),
+    audios: () => replyWithConfiguredLink(interaction, audiosChannelUrl, "audios"),
+    coinflip: () => interaction.reply(`The coin landed on **${pickRandom(["heads", "tails"])}**.`),
+    comp: handleCompetitionCommand,
+    setcomp: handleSetCompetitionCommand,
+    endcomp: handleEndCompetitionCommand,
+    servermessage: handleServerMessageCommand,
+    edge: handleEdgeCommand,
+    marvel: () => interaction.reply(marvelMessage),
+    wav: () => interaction.reply(wavMessage),
+    website: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
+    youtube: () => interaction.reply(`MrBitEdits YouTube: ${youtubeUrl}`),
+    tiktok: () => interaction.reply(`MrBitEdits TikTok: ${tiktokUrl}`),
+    nexlo: () => interaction.reply(`Nexlo's TikTok: ${nexloTiktokUrl}`),
+    iusethis: () => interaction.reply(`iusethis's TikTok: ${iusethisTiktokUrl}`),
+    pc: () => interaction.reply(pcMessage),
+    laptop: () => interaction.reply(laptopMessage),
+    members: handleMembersCommand,
+    senioreditor: () => interaction.reply(seniorEditorMessage),
+    moderator: handleModeratorCommand,
+    payhip: () => interaction.reply(`MrBit's Payhip: ${payhipUrl}`),
+    presets: () => replyWithConfiguredLink(interaction, presetsChannelUrl, "presets"),
+    programs: () => interaction.reply(`After Effects, Premiere, and other programs: ${programsUrl}`),
+    ifg: () => interaction.reply("I fucking guess \ud83e\udd40"),
+    reloadfaq: handleReloadFaqCommand
+  };
+
+  const handler = commandHandlers[interaction.commandName];
+  if (handler) {
+    await handler(interaction);
+  }
+}
+
+async function handleHelpCommand(interaction) {
+  await interaction.reply({ embeds: [buildCommandMenuEmbed()] });
+}
+
+async function handleFaqCommand(interaction) {
+  const query = interaction.options.getString("topic") || "";
+
   if (!query) {
     const list = faqs
       .map((faq) => `**${faq.id}** - ${faq.question}`)
       .join("\n");
 
-    await message.reply(
-      trimForDiscord(`Available FAQs:\n${list}\n\nUse \`${prefix}faq <name>\` to get an answer.`)
-    );
+    await interaction.reply(trimForDiscord(`Available FAQs:\n${list}\n\nUse \`/faq topic:<name>\` to get an answer.`));
     return;
   }
 
   const faq = findBestFaq(query);
   if (!faq) {
-    await message.reply(`I could not find an FAQ for "${query}". Try \`${prefix}faq\` to see available topics.`);
+    await interaction.reply(`I could not find an FAQ for "${query}". Try \`/faq\` to see available topics.`);
     return;
   }
 
-  await message.reply(formatFaqAnswer(faq));
+  await interaction.reply(formatFaqAnswer(faq));
 }
 
-async function handleAskCommand(message, query) {
-  if (!query) {
-    await message.reply(`Ask a question after the command, like \`${prefix}ask how do I verify\`.`);
-    return;
-  }
-
+async function handleAskCommand(interaction) {
+  const query = interaction.options.getString("question", true);
   const faq = findBestFaq(query);
+
   if (!faq) {
-    await message.reply(`I do not have an answer for that yet. Try \`${prefix}faq\` to see the topics I know.`);
+    await interaction.reply("I do not have an answer for that yet. Try `/faq` to see the topics I know.");
     return;
   }
 
-  await message.reply(formatFaqAnswer(faq));
+  await interaction.reply(formatFaqAnswer(faq));
 }
 
-async function handleOverlaysCommand(message) {
-  if (!overlaysChannelUrl) {
-    await message.reply("The overlays channel link has not been configured yet.");
-    return;
-  }
-
-  await message.reply(`You can find the overlays here: ${overlaysChannelUrl}`);
+async function handleCompetitionCommand(interaction) {
+  await interaction.reply(competitionState?.active
+    ? formatCompetitionAnnouncement(competitionState)
+    : "There isn't any editing competitions on right now. Check back later");
 }
 
-async function handleTopazCommand(message) {
-  if (!topazChannelUrl) {
-    await message.reply("The topaz versions channel link has not been configured yet.");
+async function handleSetCompetitionCommand(interaction) {
+  if (!canManageInteraction(interaction)) {
+    await interaction.reply({ content: "Only moderators or MrBit can set competitions.", ephemeral: true });
     return;
   }
 
-  await message.reply(`You can find the Topaz versions here: ${topazChannelUrl}`);
-}
-
-async function handleRulesCommand(message) {
-  if (!rulesChannelUrl) {
-    await message.reply("The rules channel link has not been configured yet.");
-    return;
-  }
-
-  await message.reply(`You can find the rules here: ${rulesChannelUrl}`);
-}
-
-async function handleAudiosCommand(message) {
-  if (!audiosChannelUrl) {
-    await message.reply("The audios channel link has not been configured yet.");
-    return;
-  }
-
-  await message.reply(`You can find the audios here: ${audiosChannelUrl}`);
-}
-
-async function handleModeratorCommand(message) {
-  if (!moderatorApplicationChannelUrl) {
-    await message.reply("The moderator application channel link has not been configured yet.");
-    return;
-  }
-
-  await message.reply(`${moderatorApplicationNote}\n${moderatorApplicationChannelUrl}`);
-}
-
-async function handlePresetsCommand(message) {
-  if (!presetsChannelUrl) {
-    await message.reply("The presets channel link has not been configured yet.");
-    return;
-  }
-
-  await message.reply(`You can find the presets here: ${presetsChannelUrl}`);
-}
-
-async function handleCompetitionCommand(message) {
-  if (!competitionState?.active) {
-    await message.reply("There isn't any editing competitions on right now. Check back later");
-    return;
-  }
-
-  await message.reply(formatCompetitionAnnouncement(competitionState));
-}
-
-async function handleSetCompetitionCommand(message) {
-  if (!canManageServerMessages(message)) {
-    await message.reply("Only moderators or MrBit can set competitions.");
-    return;
-  }
-
-  const announcementChannel = await getAnnouncementChannel(message);
+  const announcementChannel = await getAnnouncementChannelFromGuild(interaction.guild);
   if (!announcementChannel) {
-    await message.reply("The announcement channel has not been configured yet.");
+    await interaction.reply({ content: "The announcement channel has not been configured yet.", ephemeral: true });
     return;
   }
 
-  const answers = await collectPromptAnswers(message, [
-    ["startDate", "Date from?"],
-    ["endDate", "Date to?"],
-    ["prize", "Prize?"],
-    ["description", "Description?"],
-    ["name", "Name?"],
-    ["rules", "Rules?"]
-  ]);
-
-  if (!answers) {
-    return;
-  }
-
-  await deleteCompetitionAnnouncement(message);
+  await deleteCompetitionAnnouncementFromGuild(interaction.guild);
 
   const newCompetition = {
     active: true,
-    name: answers.name,
-    description: answers.description,
-    prize: answers.prize,
-    startDate: answers.startDate,
-    endDate: answers.endDate,
-    rules: answers.rules,
+    name: interaction.options.getString("name", true),
+    description: interaction.options.getString("description", true),
+    prize: interaction.options.getString("prize", true),
+    startDate: interaction.options.getString("date_from", true),
+    endDate: interaction.options.getString("date_to", true),
+    rules: interaction.options.getString("rules", true),
     channelId: announcementChannel.id,
     messageId: ""
   };
@@ -459,148 +347,40 @@ async function handleSetCompetitionCommand(message) {
   competitionState = newCompetition;
   saveCompetitionState(competitionState);
 
-  await message.reply("Competition announcement posted.");
+  await interaction.reply({ content: "Competition announcement posted.", ephemeral: true });
 }
 
-async function handleEndCompetitionCommand(message) {
-  if (!canManageServerMessages(message)) {
-    await message.reply("Only moderators or MrBit can end competitions.");
+async function handleEndCompetitionCommand(interaction) {
+  if (!canManageInteraction(interaction)) {
+    await interaction.reply({ content: "Only moderators or MrBit can end competitions.", ephemeral: true });
     return;
   }
 
-  await deleteCompetitionAnnouncement(message);
+  await deleteCompetitionAnnouncementFromGuild(interaction.guild);
   competitionState = { active: false };
   saveCompetitionState(competitionState);
-  await message.reply("Competition ended.");
+  await interaction.reply({ content: "Competition ended.", ephemeral: true });
 }
 
-async function handleServerMessageCommand(message, query) {
-  if (!canManageServerMessages(message)) {
-    await message.reply("Only moderators or MrBit can send server messages.");
+async function handleServerMessageCommand(interaction) {
+  if (!canManageInteraction(interaction)) {
+    await interaction.reply({ content: "Only moderators or MrBit can send server messages.", ephemeral: true });
     return;
   }
 
-  const announcementChannel = await getAnnouncementChannel(message);
+  const announcementChannel = await getAnnouncementChannelFromGuild(interaction.guild);
   if (!announcementChannel) {
-    await message.reply("The announcement channel has not been configured yet.");
+    await interaction.reply({ content: "The announcement channel has not been configured yet.", ephemeral: true });
     return;
   }
 
-  const content = query || await collectSinglePromptAnswer(message, "What message should I send to announcements?");
-  if (!content) {
-    return;
-  }
-
-  await announcementChannel.send(content);
-  await message.reply("Server message sent.");
+  await announcementChannel.send(interaction.options.getString("message", true));
+  await interaction.reply({ content: "Server message sent.", ephemeral: true });
 }
 
-async function collectPromptAnswers(message, prompts) {
-  const answers = {};
-
-  for (const [key, prompt] of prompts) {
-    const answer = await collectSinglePromptAnswer(message, prompt);
-    if (!answer) {
-      return null;
-    }
-
-    answers[key] = answer;
-  }
-
-  return answers;
-}
-
-async function collectSinglePromptAnswer(message, prompt) {
-  await message.reply(prompt);
-
-  const collected = await message.channel.awaitMessages({
-    filter: (response) => response.author.id === message.author.id && !response.author.bot,
-    max: 1,
-    time: 120000,
-    errors: ["time"]
-  }).catch(() => null);
-
-  if (!collected?.size) {
-    await message.reply("Prompt timed out. Run the command again when you're ready.");
-    return null;
-  }
-
-  const content = collected.first().content.trim();
-  if (!content) {
-    await message.reply("That answer was empty. Run the command again when you're ready.");
-    return null;
-  }
-
-  return content;
-}
-
-async function deleteCompetitionAnnouncement(message) {
-  if (!competitionState?.messageId || !competitionState?.channelId || !message.guild) {
-    return;
-  }
-
-  const channel = await message.guild.channels.fetch(competitionState.channelId).catch(() => null);
-  if (!channel?.isTextBased()) {
-    return;
-  }
-
-  const announcement = await channel.messages.fetch(competitionState.messageId).catch(() => null);
-  if (announcement) {
-    await announcement.delete().catch(() => null);
-  }
-}
-
-async function getAnnouncementChannel(message) {
-  if (!announcementChannelUrl || !message.guild) {
-    return null;
-  }
-
-  const channelId = extractDiscordId(announcementChannelUrl);
-  if (!channelId) {
-    return null;
-  }
-
-  const channel = await message.guild.channels.fetch(channelId).catch(() => null);
-  return channel?.isTextBased() ? channel : null;
-}
-
-function canManageServerMessages(message) {
-  if (message.author.id === mrbitUserId) {
-    return true;
-  }
-
-  if (message.member?.permissions?.has(PermissionsBitField.Flags.ManageGuild)) {
-    return true;
-  }
-
-  return competitionManagerRoleIds.some((roleId) => message.member?.roles?.cache?.has(roleId));
-}
-
-function extractDiscordId(value) {
-  return String(value || "").match(/\d{17,20}/)?.[0] || "";
-}
-
-function formatCompetitionAnnouncement(competition) {
-  const lines = [
-    `**${competition.name}**`,
-    "",
-    `"${competition.description}"`,
-    `**${competition.prize}**`,
-    "",
-    `From *${competition.startDate}*`,
-    `To *${competition.endDate}*`
-  ];
-
-  if (competition.rules) {
-    lines.push("", "**Rules**", competition.rules);
-  }
-
-  return trimForDiscord(lines.join("\n"));
-}
-
-async function handleEdgeCommand(message) {
-  const edgeReply = getEdgeReply(message.author.id);
-  await message.reply(edgeReply.content);
+async function handleEdgeCommand(interaction) {
+  const edgeReply = getEdgeReply(interaction.user.id);
+  await interaction.reply(edgeReply.content);
 
   if (!edgeReply.shouldDmMrBit) {
     return;
@@ -617,6 +397,98 @@ async function handleEdgeCommand(message) {
   } catch (error) {
     console.error("Could not send edge DM:", error);
   }
+}
+
+async function handleMembersCommand(interaction) {
+  if (!interaction.guild) {
+    await interaction.reply("This command only works in a server.");
+    return;
+  }
+
+  const guild = await interaction.guild.fetch();
+  await interaction.reply(`Server member count **${guild.memberCount}**`);
+}
+
+async function handleModeratorCommand(interaction) {
+  await interaction.reply(moderatorApplicationChannelUrl
+    ? `${moderatorApplicationNote}\n${moderatorApplicationChannelUrl}`
+    : "The moderator application channel link has not been configured yet.");
+}
+
+async function handleReloadFaqCommand(interaction) {
+  if (!canManageInteraction(interaction)) {
+    await interaction.reply({ content: "Only server managers can reload the FAQ list.", ephemeral: true });
+    return;
+  }
+
+  faqs = loadFaqs();
+  await interaction.reply({ content: `Reloaded ${faqs.length} FAQ entries.`, ephemeral: true });
+}
+
+async function replyWithConfiguredLink(interaction, url, label) {
+  await interaction.reply(url
+    ? `You can find the ${label} here: ${url}`
+    : `The ${label} channel link has not been configured yet.`);
+}
+
+async function replyToInteraction(interaction, options) {
+  if (interaction.replied || interaction.deferred) {
+    await interaction.followUp(options).catch(() => null);
+    return;
+  }
+
+  await interaction.reply(options).catch(() => null);
+}
+
+async function deleteCompetitionAnnouncementFromGuild(guild) {
+  if (!competitionState?.messageId || !competitionState?.channelId || !guild) {
+    return;
+  }
+
+  const channel = await guild.channels.fetch(competitionState.channelId).catch(() => null);
+  if (!channel?.isTextBased()) {
+    return;
+  }
+
+  const announcement = await channel.messages.fetch(competitionState.messageId).catch(() => null);
+  if (announcement) {
+    await announcement.delete().catch(() => null);
+  }
+}
+
+async function getAnnouncementChannelFromGuild(guild) {
+  if (!announcementChannelUrl || !guild) {
+    return null;
+  }
+
+  const channelId = extractDiscordId(announcementChannelUrl);
+  if (!channelId) {
+    return null;
+  }
+
+  const channel = await guild.channels.fetch(channelId).catch(() => null);
+  return channel?.isTextBased() ? channel : null;
+}
+
+function canManageInteraction(interaction) {
+  if (interaction.user.id === mrbitUserId) {
+    return true;
+  }
+
+  if (interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageGuild)) {
+    return true;
+  }
+
+  const roles = interaction.member?.roles;
+  if (roles?.cache) {
+    return competitionManagerRoleIds.some((roleId) => roles.cache.has(roleId));
+  }
+
+  if (Array.isArray(roles)) {
+    return competitionManagerRoleIds.some((roleId) => roles.includes(roleId));
+  }
+
+  return false;
 }
 
 function getEdgeReply(userId) {
@@ -648,140 +520,41 @@ function getEdgeReply(userId) {
   };
 }
 
-async function handleReloadCommand(message) {
-  if (!message.member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
-    await message.reply("Only server managers can reload the FAQ list.");
-    return;
-  }
-
-  faqs = loadFaqs();
-  await message.reply(`Reloaded ${faqs.length} FAQ entries.`);
-}
-
-async function handleMembersCommand(message) {
-  if (!message.guild) {
-    await message.reply("This command only works in a server.");
-    return;
-  }
-
-  const guild = await message.guild.fetch();
-  await message.reply(`Server member count **${guild.memberCount}**`);
-}
-
-function buildHelpMessage() {
-  return [
-    `Commands start with \`${prefix}\`.`,
-    "",
-    `\`${prefix}help\` - Show this message.`,
-    `\`${prefix}faq\` - List all FAQ topics.`,
-    `\`${prefix}faq <topic>\` - Show an answer by topic or alias.`,
-    `\`${prefix}ask <question>\` - Search the FAQ answers using a normal question.`,
-    `\`${prefix}overlays\` - Get the overlays channel link.`,
-    `\`${prefix}topaz\` - Get the Topaz versions channel link.`,
-    `\`${prefix}rules\` - Get the rules channel link.`,
-    `\`${prefix}audios\` - Get the audios channel link.`,
-    `\`${prefix}coinflip\` - Flip a coin.`,
-    `\`${prefix}comp\` - Show the current editing competition.`,
-    `\`${prefix}setcomp\` - Set and announce a competition. Requires moderator access.`,
-    `\`${prefix}endcomp\` - End the current competition. Requires moderator access.`,
-    `\`${prefix}servermessage\` - Send a message to announcements. Requires moderator access.`,
-    `\`${prefix}edge\` - Get the edge reply.`,
-    `\`${prefix}marvel\` - Get MrBIt's Marvel take.`,
-    `\`${prefix}wav\` - Get the WAV audio note.`,
-    `\`${prefix}website\` - Get the official website link.`,
-    `\`${prefix}youtube\` - Get the MrBitEdits YouTube link.`,
-    `\`${prefix}tiktok\` - Get the MrBitEdits TikTok link.`,
-    `\`${prefix}nexlo\` - Get Nexlo's TikTok link.`,
-    `\`${prefix}iusethis\` - Get iusethis's TikTok link.`,
-    `\`${prefix}pc\` - Get MrBit's PC specs.`,
-    `\`${prefix}laptop\` - Get iusethis's laptop note.`,
-    `\`${prefix}members\` - Get the server member count.`,
-    `\`${prefix}senioreditor\` - Get senior editor role info.`,
-    `\`${prefix}moderator\` - Get the moderator application link.`,
-    `\`${prefix}payhip\` - Get MrBit's Payhip link.`,
-    `\`${prefix}presets\` - Get the presets channel link.`,
-    `\`${prefix}programs\` - Get the programs website link.`,
-    `\`${prefix}ifg\` - Get the IFG reply.`,
-    `\`${prefix}reloadfaq\` - Reload FAQ entries after editing config/faqs.json. Requires Manage Server.`
-  ].join("\n");
-}
-
 function buildCommandMenuEmbed() {
   return new EmbedBuilder()
     .setTitle("Effects Academy Bot Commands")
-    .setDescription(`Use commands with the \`${prefix}\` prefix.`)
+    .setDescription("Use Discord slash commands.")
     .setColor(0x8b5cf6)
     .addFields(
       {
         name: "Channel Links",
-        value: [
-          `\`${prefix}overlays\``,
-          `\`${prefix}topaz\``,
-          `\`${prefix}rules\``,
-          `\`${prefix}audios\``,
-          `\`${prefix}moderator\``,
-          `\`${prefix}presets\``
-        ].join(" ")
+        value: "`/overlays` `/topaz` `/rules` `/audios` `/moderator` `/presets`"
       },
       {
         name: "Links",
-        value: [
-          `\`${prefix}website\``,
-          `\`${prefix}youtube\``,
-          `\`${prefix}tiktok\``,
-          `\`${prefix}nexlo\``,
-          `\`${prefix}iusethis\``,
-          `\`${prefix}payhip\``,
-          `\`${prefix}programs\``
-        ].join(" ")
+        value: "`/website` `/youtube` `/tiktok` `/nexlo` `/iusethis` `/payhip` `/programs`"
       },
       {
         name: "Info",
-        value: [
-          `\`${prefix}pc\``,
-          `\`${prefix}laptop\``,
-          `\`${prefix}members\``,
-          `\`${prefix}senioreditor\``,
-          `\`${prefix}marvel\``,
-          `\`${prefix}wav\``
-        ].join(" ")
+        value: "`/pc` `/laptop` `/members` `/senioreditor` `/marvel` `/wav`"
       },
       {
         name: "Fun",
-        value: [
-          `\`${prefix}edge\``,
-          `\`${prefix}coinflip\``,
-          `\`${prefix}ifg\``
-        ].join(" ")
+        value: "`/edge` `/coinflip` `/ifg`"
       },
       {
         name: "Competition",
-        value: [
-          `\`${prefix}comp\``,
-          `\`${prefix}setcomp\``,
-          `\`${prefix}endcomp\``
-        ].join(" ")
+        value: "`/comp` `/setcomp` `/endcomp`"
       },
       {
         name: "Admin",
-        value: [
-          `\`${prefix}servermessage\``,
-          `\`${prefix}reloadfaq\``
-        ].join(" ")
+        value: "`/servermessage` `/reloadfaq`"
       },
       {
         name: "FAQ",
-        value: [
-          `\`${prefix}faq\``,
-          `\`${prefix}faq <topic>\``,
-          `\`${prefix}ask <question>\``
-        ].join(" ")
+        value: "`/faq` `/faq topic:<topic>` `/ask question:<question>`"
       }
     );
-}
-
-function pickRandom(values) {
-  return values[Math.floor(Math.random() * values.length)];
 }
 
 function findBestFaq(query) {
@@ -834,6 +607,28 @@ function formatFaqAnswer(faq) {
   return trimForDiscord(`**${faq.question}**\n${faq.answer}`);
 }
 
+function formatCompetitionAnnouncement(competition) {
+  const lines = [
+    `**${competition.name}**`,
+    "",
+    `"${competition.description}"`,
+    `**${competition.prize}**`,
+    "",
+    `From *${competition.startDate}*`,
+    `To *${competition.endDate}*`
+  ];
+
+  if (competition.rules) {
+    lines.push("", "**Rules**", competition.rules);
+  }
+
+  return trimForDiscord(lines.join("\n"));
+}
+
+function extractDiscordId(value) {
+  return String(value || "").match(/\d{17,20}/)?.[0] || "";
+}
+
 function normalize(value) {
   return String(value)
     .toLowerCase()
@@ -848,6 +643,10 @@ function trimForDiscord(value) {
   }
 
   return `${value.slice(0, 1997)}...`;
+}
+
+function pickRandom(values) {
+  return values[Math.floor(Math.random() * values.length)];
 }
 
 if (!process.env.DISCORD_TOKEN) {
