@@ -210,7 +210,10 @@ function buildSlashCommands() {
       .setName("servermessage")
       .setDescription("Send a message to the announcement channel")
       .addStringOption((option) =>
-        option.setName("message").setDescription("Message to send").setRequired(true)
+        option.setName("name").setDescription("Announcement name/title").setRequired(true)
+      )
+      .addStringOption((option) =>
+        option.setName("description").setDescription("Announcement description").setRequired(true)
       ),
     new SlashCommandBuilder().setName("edge").setDescription("Get the edge reply"),
     new SlashCommandBuilder().setName("marvel").setDescription("Get MrBIt's Marvel take"),
@@ -374,7 +377,10 @@ async function handleServerMessageCommand(interaction) {
     return;
   }
 
-  await announcementChannel.send(interaction.options.getString("message", true));
+  await announcementChannel.send(formatServerAnnouncement({
+    name: interaction.options.getString("name", true),
+    description: interaction.options.getString("description", true)
+  }));
   await interaction.reply({ content: "Server message sent.", ephemeral: true });
 }
 
@@ -623,6 +629,14 @@ function formatCompetitionAnnouncement(competition) {
   }
 
   return trimForDiscord(lines.join("\n"));
+}
+
+function formatServerAnnouncement(announcement) {
+  return trimForDiscord([
+    `**${announcement.name}**`,
+    "",
+    `"${announcement.description}"`
+  ].join("\n"));
 }
 
 function extractDiscordId(value) {
