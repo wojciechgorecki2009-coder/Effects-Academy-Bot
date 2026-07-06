@@ -16,7 +16,7 @@ A small Discord bot for answering common server questions with Discord slash com
 - `/comp` - Shows the current editing competition, if one is active.
 - `/setcomp` - Uses slash command fields for competition info, then posts it in announcements. Requires moderator access.
 - `/endcomp` - Deletes the active competition announcement. Requires moderator access.
-- `/servermessage` - Sends a message to announcements. Requires moderator access.
+- `/servermessage` - Sends a named announcement with a description. Requires moderator access.
 - `/edge` - Sends a random edge reply.
 - `/marvel` - Sends MrBIt's Marvel take.
 - `/wav` - Sends the WAV audio note.
