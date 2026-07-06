@@ -1,7 +1,7 @@
 {
   "name": "discord-faq-bot",
   "version": "1.0.0",
-  "description": "A simple Discord FAQ bot with ! commands.",
+  "description": "A simple Discord FAQ bot with slash commands.",
   "main": "src/index.js",
   "type": "commonjs",
   "scripts": {
