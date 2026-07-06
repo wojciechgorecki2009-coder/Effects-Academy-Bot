@@ -10,6 +10,13 @@ A small Discord bot for answering common server questions with commands that sta
 - `!ask how do I verify` - Searches the FAQ list using a normal question.
 - `!overlays` - Sends users the overlays channel link.
 - `!topaz` - Sends users the Topaz versions channel link.
+- `!rules` - Sends users the rules channel link.
+- `!audios` - Sends users the audios channel link.
+- `!coinflip` - Flips a coin and replies with heads or tails.
+- `!comp` - Shows the current editing competition, if one is active.
+- `!setcomp` - Asks for competition info, then posts it in announcements. Requires moderator access.
+- `!endcomp` - Deletes the active competition announcement. Requires moderator access.
+- `!servermessage` - Sends a message to announcements. Requires moderator access.
 - `!edge` - Sends a random edge reply.
 - `!marvel` - Sends MrBIt's Marvel take.
 - `!wav` - Sends the WAV audio note.
@@ -100,8 +107,32 @@ Set `MODERATOR_APPLICATION_CHANNEL_URL` in `.env` or in Render's environment var
 
 Set `PRESETS_CHANNEL_URL` in `.env` or in Render's environment variables.
 
+## Rules Channel
+
+Set `RULES_CHANNEL_URL` in `.env` or in your hosting site's environment variables.
+
+## Audios Channel
+
+Set `AUDIOS_CHANNEL_URL` in `.env` or in your hosting site's environment variables.
+
+## Announcement Channel
+
+Set `ANNOUNCEMENT_CHANNEL_URL` in `.env` or in your hosting site's environment variables.
+
+`!setcomp`, `!endcomp`, and `!servermessage` use this channel.
+
 ## Edge DM
 
 Set `MRBIT_USER_ID` in `.env` or in Render's environment variables so `!edge` can DM MrBit.
 
 To get a Discord user ID, enable Developer Mode in Discord, right-click the user, and choose **Copy User ID**.
+
+## Competition Managers
+
+`!setcomp`, `!endcomp`, and `!servermessage` can be used by MrBit, anyone with **Manage Server**, or anyone with a role listed in `COMP_MANAGER_ROLE_IDS`.
+
+To allow specific roles, enable Developer Mode in Discord, right-click each role, copy its role ID, and separate multiple IDs with commas:
+
+```env
+COMP_MANAGER_ROLE_IDS=123456789012345678,234567890123456789
+```
