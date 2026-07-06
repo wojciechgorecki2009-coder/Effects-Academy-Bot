@@ -277,7 +277,7 @@ async function handleSlashCommand(interaction) {
 }
 
 async function handleHelpCommand(interaction) {
-  await interaction.reply({ embeds: [buildCommandMenuEmbed()] });
+  await interaction.reply({ embeds: [buildCommandMenuEmbed(canManageInteraction(interaction))] });
 }
 
 async function handleFaqCommand(interaction) {
@@ -526,8 +526,8 @@ function getEdgeReply(userId) {
   };
 }
 
-function buildCommandMenuEmbed() {
-  return new EmbedBuilder()
+function buildCommandMenuEmbed(showStaffCommands = false) {
+  const embed = new EmbedBuilder()
     .setTitle("Effects Academy Bot Commands")
     .setDescription("Use Discord slash commands.")
     .setColor(0x8b5cf6)
@@ -549,18 +549,25 @@ function buildCommandMenuEmbed() {
         value: "`/edge` `/coinflip` `/ifg`"
       },
       {
+        name: "FAQ",
+        value: "`/faq` `/faq topic:<topic>` `/ask question:<question>`"
+      }
+    );
+
+  if (showStaffCommands) {
+    embed.addFields(
+      {
         name: "Competition",
         value: "`/comp` `/setcomp` `/endcomp`"
       },
       {
         name: "Admin",
         value: "`/servermessage` `/reloadfaq`"
-      },
-      {
-        name: "FAQ",
-        value: "`/faq` `/faq topic:<topic>` `/ask question:<question>`"
       }
     );
+  }
+
+  return embed;
 }
 
 function findBestFaq(query) {
