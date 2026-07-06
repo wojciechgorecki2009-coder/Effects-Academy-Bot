@@ -15,15 +15,23 @@ const overlaysChannelUrl = process.env.OVERLAYS_CHANNEL_URL || "";
 const topazChannelUrl = process.env.TOPAZ_CHANNEL_URL || "";
 const moderatorApplicationChannelUrl = process.env.MODERATOR_APPLICATION_CHANNEL_URL || "";
 const presetsChannelUrl = process.env.PRESETS_CHANNEL_URL || "";
+const rulesChannelUrl = process.env.RULES_CHANNEL_URL || "";
+const audiosChannelUrl = process.env.AUDIOS_CHANNEL_URL || "";
+const announcementChannelUrl = process.env.ANNOUNCEMENT_CHANNEL_URL || "";
 const mrbitUserId = process.env.MRBIT_USER_ID || "";
+const competitionManagerRoleIds = (process.env.COMP_MANAGER_ROLE_IDS || "")
+  .split(",")
+  .map((roleId) => roleId.trim())
+  .filter(Boolean);
 const websiteUrl = "https://effectsacademy.com";
 const payhipUrl = "https://payhip.com/MrBitEdits";
-const programsUrl = "https://satvrn.li";
+const programsUrl = "https://keyfla.me/windows";
 const youtubeUrl = "https://www.youtube.com/channel/UCfU49lYtzyIwKfE6gvaKL-w";
 const tiktokUrl = "https://www.tiktok.com/@mrbit_edits";
 const nexloTiktokUrl = "https://www.tiktok.com/@nexlo_ae";
 const iusethisTiktokUrl = "https://www.tiktok.com/@.iusethis";
 const faqsPath = path.join(__dirname, "..", "config", "faqs.json");
+const competitionStatePath = path.join(__dirname, "..", "config", "competition.json");
 
 const edgeReplies = [
   "haha so funny let me dm mrbit \u270c\ufe0f",
@@ -54,10 +62,11 @@ const moderatorApplicationNote =
   "We don't really that many mods your application most likely will be declined or be accepted when there is need for more moderators";
 
 const pcMessage = [
-  "CPU - Ryzen 5 5600",
-  "GPU - RTX 3070",
-  "RAM - 32GB DDR4",
-  "STORAGE - 2.3TB",
+  "**MrBit's PC**",
+  "*CPU* - Ryzen 5 5600",
+  "*GPU* - RTX 3070",
+  "*RAM* - 32GB DDR4",
+  "*STORAGE* - 2.3TB",
   "PC Part Picker List: https://uk.pcpartpicker.com/list/C26GJw"
 ].join("\n");
 
@@ -65,6 +74,7 @@ const laptopMessage =
   "Iusethis's laptop doesn't deserve a command lets be honest it uses a laptop gpu its just buns \ud83e\udd40";
 
 let faqs = loadFaqs();
+let competitionState = loadCompetitionState();
 
 const client = new Client({
   intents: [
@@ -118,6 +128,41 @@ client.on("messageCreate", async (message) => {
 
     if (command === "topaz") {
       await handleTopazCommand(message);
+      return;
+    }
+
+    if (command === "rules") {
+      await handleRulesCommand(message);
+      return;
+    }
+
+    if (command === "audios" || command === "audio") {
+      await handleAudiosCommand(message);
+      return;
+    }
+
+    if (command === "coinflip" || command === "flipcoin") {
+      await message.reply(`The coin landed on **${pickRandom(["heads", "tails"])}**.`);
+      return;
+    }
+
+    if (command === "comp" || command === "competition") {
+      await handleCompetitionCommand(message);
+      return;
+    }
+
+    if (command === "setcomp") {
+      await handleSetCompetitionCommand(message);
+      return;
+    }
+
+    if (command === "endcomp") {
+      await handleEndCompetitionCommand(message);
+      return;
+    }
+
+    if (command === "servermessage" || command === "announce") {
+      await handleServerMessageCommand(message, query);
       return;
     }
 
@@ -247,6 +292,30 @@ function loadFaqs() {
   return loadedFaqs;
 }
 
+function loadCompetitionState() {
+  if (!fs.existsSync(competitionStatePath)) {
+    return { active: false };
+  }
+
+  const raw = fs.readFileSync(competitionStatePath, "utf8");
+  if (!raw.trim()) {
+    return { active: false };
+  }
+
+  try {
+    const loadedState = JSON.parse(raw);
+    return loadedState && typeof loadedState === "object" ? loadedState : { active: false };
+  } catch (error) {
+    console.warn("config/competition.json is invalid; starting with no active competition.");
+    return { active: false };
+  }
+}
+
+function saveCompetitionState(state) {
+  fs.mkdirSync(path.dirname(competitionStatePath), { recursive: true });
+  fs.writeFileSync(competitionStatePath, `${JSON.stringify(state, null, 2)}\n`);
+}
+
 async function handleFaqCommand(message, query) {
   if (!query) {
     const list = faqs
@@ -301,6 +370,24 @@ async function handleTopazCommand(message) {
   await message.reply(`You can find the Topaz versions here: ${topazChannelUrl}`);
 }
 
+async function handleRulesCommand(message) {
+  if (!rulesChannelUrl) {
+    await message.reply("The rules channel link has not been configured yet.");
+    return;
+  }
+
+  await message.reply(`You can find the rules here: ${rulesChannelUrl}`);
+}
+
+async function handleAudiosCommand(message) {
+  if (!audiosChannelUrl) {
+    await message.reply("The audios channel link has not been configured yet.");
+    return;
+  }
+
+  await message.reply(`You can find the audios here: ${audiosChannelUrl}`);
+}
+
 async function handleModeratorCommand(message) {
   if (!moderatorApplicationChannelUrl) {
     await message.reply("The moderator application channel link has not been configured yet.");
@@ -317,6 +404,198 @@ async function handlePresetsCommand(message) {
   }
 
   await message.reply(`You can find the presets here: ${presetsChannelUrl}`);
+}
+
+async function handleCompetitionCommand(message) {
+  if (!competitionState?.active) {
+    await message.reply("There isn't any editing competitions on right now. Check back later");
+    return;
+  }
+
+  await message.reply(formatCompetitionAnnouncement(competitionState));
+}
+
+async function handleSetCompetitionCommand(message) {
+  if (!canManageServerMessages(message)) {
+    await message.reply("Only moderators or MrBit can set competitions.");
+    return;
+  }
+
+  const announcementChannel = await getAnnouncementChannel(message);
+  if (!announcementChannel) {
+    await message.reply("The announcement channel has not been configured yet.");
+    return;
+  }
+
+  const answers = await collectPromptAnswers(message, [
+    ["startDate", "Date from?"],
+    ["endDate", "Date to?"],
+    ["prize", "Prize?"],
+    ["description", "Description?"],
+    ["name", "Name?"],
+    ["rules", "Rules?"]
+  ]);
+
+  if (!answers) {
+    return;
+  }
+
+  await deleteCompetitionAnnouncement(message);
+
+  const newCompetition = {
+    active: true,
+    name: answers.name,
+    description: answers.description,
+    prize: answers.prize,
+    startDate: answers.startDate,
+    endDate: answers.endDate,
+    rules: answers.rules,
+    channelId: announcementChannel.id,
+    messageId: ""
+  };
+
+  const announcement = await announcementChannel.send(formatCompetitionAnnouncement(newCompetition));
+  newCompetition.messageId = announcement.id;
+  competitionState = newCompetition;
+  saveCompetitionState(competitionState);
+
+  await message.reply("Competition announcement posted.");
+}
+
+async function handleEndCompetitionCommand(message) {
+  if (!canManageServerMessages(message)) {
+    await message.reply("Only moderators or MrBit can end competitions.");
+    return;
+  }
+
+  await deleteCompetitionAnnouncement(message);
+  competitionState = { active: false };
+  saveCompetitionState(competitionState);
+  await message.reply("Competition ended.");
+}
+
+async function handleServerMessageCommand(message, query) {
+  if (!canManageServerMessages(message)) {
+    await message.reply("Only moderators or MrBit can send server messages.");
+    return;
+  }
+
+  const announcementChannel = await getAnnouncementChannel(message);
+  if (!announcementChannel) {
+    await message.reply("The announcement channel has not been configured yet.");
+    return;
+  }
+
+  const content = query || await collectSinglePromptAnswer(message, "What message should I send to announcements?");
+  if (!content) {
+    return;
+  }
+
+  await announcementChannel.send(content);
+  await message.reply("Server message sent.");
+}
+
+async function collectPromptAnswers(message, prompts) {
+  const answers = {};
+
+  for (const [key, prompt] of prompts) {
+    const answer = await collectSinglePromptAnswer(message, prompt);
+    if (!answer) {
+      return null;
+    }
+
+    answers[key] = answer;
+  }
+
+  return answers;
+}
+
+async function collectSinglePromptAnswer(message, prompt) {
+  await message.reply(prompt);
+
+  const collected = await message.channel.awaitMessages({
+    filter: (response) => response.author.id === message.author.id && !response.author.bot,
+    max: 1,
+    time: 120000,
+    errors: ["time"]
+  }).catch(() => null);
+
+  if (!collected?.size) {
+    await message.reply("Prompt timed out. Run the command again when you're ready.");
+    return null;
+  }
+
+  const content = collected.first().content.trim();
+  if (!content) {
+    await message.reply("That answer was empty. Run the command again when you're ready.");
+    return null;
+  }
+
+  return content;
+}
+
+async function deleteCompetitionAnnouncement(message) {
+  if (!competitionState?.messageId || !competitionState?.channelId || !message.guild) {
+    return;
+  }
+
+  const channel = await message.guild.channels.fetch(competitionState.channelId).catch(() => null);
+  if (!channel?.isTextBased()) {
+    return;
+  }
+
+  const announcement = await channel.messages.fetch(competitionState.messageId).catch(() => null);
+  if (announcement) {
+    await announcement.delete().catch(() => null);
+  }
+}
+
+async function getAnnouncementChannel(message) {
+  if (!announcementChannelUrl || !message.guild) {
+    return null;
+  }
+
+  const channelId = extractDiscordId(announcementChannelUrl);
+  if (!channelId) {
+    return null;
+  }
+
+  const channel = await message.guild.channels.fetch(channelId).catch(() => null);
+  return channel?.isTextBased() ? channel : null;
+}
+
+function canManageServerMessages(message) {
+  if (message.author.id === mrbitUserId) {
+    return true;
+  }
+
+  if (message.member?.permissions?.has(PermissionsBitField.Flags.ManageGuild)) {
+    return true;
+  }
+
+  return competitionManagerRoleIds.some((roleId) => message.member?.roles?.cache?.has(roleId));
+}
+
+function extractDiscordId(value) {
+  return String(value || "").match(/\d{17,20}/)?.[0] || "";
+}
+
+function formatCompetitionAnnouncement(competition) {
+  const lines = [
+    `**${competition.name}**`,
+    "",
+    `"${competition.description}"`,
+    `**${competition.prize}**`,
+    "",
+    `From *${competition.startDate}*`,
+    `To *${competition.endDate}*`
+  ];
+
+  if (competition.rules) {
+    lines.push("", "**Rules**", competition.rules);
+  }
+
+  return trimForDiscord(lines.join("\n"));
 }
 
 async function handleEdgeCommand(message) {
@@ -399,6 +678,13 @@ function buildHelpMessage() {
     `\`${prefix}ask <question>\` - Search the FAQ answers using a normal question.`,
     `\`${prefix}overlays\` - Get the overlays channel link.`,
     `\`${prefix}topaz\` - Get the Topaz versions channel link.`,
+    `\`${prefix}rules\` - Get the rules channel link.`,
+    `\`${prefix}audios\` - Get the audios channel link.`,
+    `\`${prefix}coinflip\` - Flip a coin.`,
+    `\`${prefix}comp\` - Show the current editing competition.`,
+    `\`${prefix}setcomp\` - Set and announce a competition. Requires moderator access.`,
+    `\`${prefix}endcomp\` - End the current competition. Requires moderator access.`,
+    `\`${prefix}servermessage\` - Send a message to announcements. Requires moderator access.`,
     `\`${prefix}edge\` - Get the edge reply.`,
     `\`${prefix}marvel\` - Get MrBIt's Marvel take.`,
     `\`${prefix}wav\` - Get the WAV audio note.`,
@@ -431,6 +717,8 @@ function buildCommandMenuEmbed() {
         value: [
           `\`${prefix}overlays\``,
           `\`${prefix}topaz\``,
+          `\`${prefix}rules\``,
+          `\`${prefix}audios\``,
           `\`${prefix}moderator\``,
           `\`${prefix}presets\``
         ].join(" ")
@@ -462,7 +750,23 @@ function buildCommandMenuEmbed() {
         name: "Fun",
         value: [
           `\`${prefix}edge\``,
+          `\`${prefix}coinflip\``,
           `\`${prefix}ifg\``
+        ].join(" ")
+      },
+      {
+        name: "Competition",
+        value: [
+          `\`${prefix}comp\``,
+          `\`${prefix}setcomp\``,
+          `\`${prefix}endcomp\``
+        ].join(" ")
+      },
+      {
+        name: "Admin",
+        value: [
+          `\`${prefix}servermessage\``,
+          `\`${prefix}reloadfaq\``
         ].join(" ")
       },
       {
