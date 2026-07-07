@@ -647,7 +647,8 @@ function formatServerAnnouncement(announcement) {
 }
 
 function extractDiscordId(value) {
-  return String(value || "").match(/\d{17,20}/)?.[0] || "";
+  const ids = String(value || "").match(/\d{17,20}/g) || [];
+  return ids.at(-1) || "";
 }
 
 function normalize(value) {
