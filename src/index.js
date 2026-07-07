@@ -214,6 +214,17 @@ function buildSlashCommands() {
       )
       .addStringOption((option) =>
         option.setName("description").setDescription("Announcement description").setRequired(true)
+      )
+      .addStringOption((option) =>
+        option
+          .setName("ping")
+          .setDescription("Who to ping with the announcement")
+          .setRequired(false)
+          .addChoices(
+            { name: "No ping", value: "none" },
+            { name: "@everyone", value: "everyone" },
+            { name: "@here", value: "here" }
+          )
       ),
     new SlashCommandBuilder().setName("edge").setDescription("Get the edge reply"),
     new SlashCommandBuilder().setName("marvel").setDescription("Get MrBIt's Marvel take"),
@@ -379,7 +390,8 @@ async function handleServerMessageCommand(interaction) {
 
   await announcementChannel.send(formatServerAnnouncement({
     name: interaction.options.getString("name", true),
-    description: interaction.options.getString("description", true)
+    description: interaction.options.getString("description", true),
+    ping: interaction.options.getString("ping") || "none"
   }));
   await interaction.reply({ content: "Server message sent.", ephemeral: true });
 }
@@ -639,11 +651,19 @@ function formatCompetitionAnnouncement(competition) {
 }
 
 function formatServerAnnouncement(announcement) {
-  return trimForDiscord([
+  const lines = [
     `# **${announcement.name}**`,
     "",
     announcement.description
-  ].join("\n"));
+  ];
+
+  if (announcement.ping === "everyone") {
+    lines.push("", "@everyone");
+  } else if (announcement.ping === "here") {
+    lines.push("", "@here");
+  }
+
+  return trimForDiscord(lines.join("\n"));
 }
 
 function extractDiscordId(value) {
