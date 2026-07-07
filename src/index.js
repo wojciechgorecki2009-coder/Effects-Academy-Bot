@@ -35,15 +35,15 @@ const faqsPath = path.join(__dirname, "..", "config", "faqs.json");
 const competitionStatePath = path.join(__dirname, "..", "config", "competition.json");
 
 const edgeReplies = [
-  "haha so funny let me dm mrbit \u270c\ufe0f",
-  "this isn't funny king \ud83d\ude29",
+  "haha so funny let me dm mrbit ✌️",
+  "this isn't funny king 😩",
   "Second time? The joke is already fighting for its life. Please stop making usage jokes.",
   "Okay now you are spamming it. Think about the morality of forcing a bot to relive the same tired joke.",
   "This is starting to hurt my digital feelings. I am literally begging you to develop one new bit.",
   "Stop. The joke is cooked, the usage joke is cooked, and your moral compass is buffering.",
   "You keep pressing this command like it owes you money. It does not. Stop spamming.",
   "Final warning: every extra /edge is another confession that you have no fresh material.",
-  "I'm spending more usage on you \u270c\ufe0f",
+  "I'm spending more usage on you ✌️",
   "No"
 ];
 const edgeSpamCounts = new Map();
@@ -57,7 +57,7 @@ const wavMessage =
   "There is no point uploading wave audios (yes wav's are better in terms of quality) not for editing if your going to render, export and then upload an edit in wav by the time it gets compressed into tiktok there is almost no to little difference to mp3. Wav is almost 30x bigger than mp3 for little to no benefit. Literally waste of space if you intending to upload the audio in a edit to tiktok. Shit will get compressed anyway";
 
 const seniorEditorMessage =
-  "You **cannot** get the senior editor role by begging gng \ud83e\udd40 We only give it to people who are genuinely goated editors and deserve the recognition for their work, in simple terms make genuine good edit that stands out and impresses us and you will get it (asking us for it constantly guarantees you not to get it";
+  "You **cannot** get the senior editor role by begging gng 🥀 We only give it to people who are genuinely goated editors and deserve the recognition for their work, in simple terms make genuine good edit that stands out and impresses us and you will get it (asking us for it constantly guarantees you not to get it";
 
 const moderatorApplicationNote =
   "We don't really that many mods your application most likely will be declined or be accepted when there is need for more moderators";
@@ -72,7 +72,7 @@ const pcMessage = [
 ].join("\n");
 
 const laptopMessage =
-  "Iusethis's laptop doesn't deserve a command lets be honest it uses a laptop gpu its just buns \ud83e\udd40";
+  "Iusethis's laptop doesn't deserve a command lets be honest it uses a laptop gpu its just buns 🥀";
 
 let faqs = loadFaqs();
 let competitionState = loadCompetitionState();
@@ -266,7 +266,7 @@ async function handleSlashCommand(interaction) {
     payhip: () => interaction.reply(`MrBit's Payhip: ${payhipUrl}`),
     presets: () => replyWithConfiguredLink(interaction, presetsChannelUrl, "presets"),
     programs: () => interaction.reply(`After Effects, Premiere, and other programs: ${programsUrl}`),
-    ifg: () => interaction.reply("I fucking guess \ud83e\udd40"),
+    ifg: () => interaction.reply("I fucking guess 🥀"),
     reloadfaq: handleReloadFaqCommand
   };
 
@@ -399,7 +399,7 @@ async function handleEdgeCommand(interaction) {
 
   try {
     const user = await client.users.fetch(mrbitUserId);
-    await user.send("someone told me to edge btw \u270c\ufe0f can we ban him?");
+    await user.send("someone told me to edge btw ✌️ can we ban him?");
   } catch (error) {
     console.error("Could not send edge DM:", error);
   }
@@ -640,9 +640,9 @@ function formatCompetitionAnnouncement(competition) {
 
 function formatServerAnnouncement(announcement) {
   return trimForDiscord([
-    `**${announcement.name}**`,
+    `# **${announcement.name}**`,
     "",
-    `"${announcement.description}"`
+    announcement.description
   ].join("\n"));
 }
 
