@@ -23,6 +23,8 @@ const competitionManagerRoleIds = (process.env.COMP_MANAGER_ROLE_IDS || "")
   .split(",")
   .map((roleId) => roleId.trim())
   .filter(Boolean);
+const moderatorRoleId = process.env.MODERATOR_ROLE_ID || competitionManagerRoleIds[0] || "";
+const viewerRoleId = process.env.VIEWER_ROLE_ID || "";
 
 const websiteUrl = "https://effectsacademy.com";
 const payhipUrl = "https://payhip.com/MrBitEdits";
@@ -223,7 +225,9 @@ function buildSlashCommands() {
           .addChoices(
             { name: "No ping", value: "none" },
             { name: "@everyone", value: "everyone" },
-            { name: "@here", value: "here" }
+            { name: "@here", value: "here" },
+            { name: "@moderator", value: "moderator" },
+            { name: "@viewer", value: "viewer" }
           )
       ),
     new SlashCommandBuilder().setName("edge").setDescription("Get the edge reply"),
@@ -656,14 +660,24 @@ function formatServerAnnouncement(announcement) {
     "",
     announcement.description
   ];
+  const ping = formatAnnouncementPing(announcement.ping);
 
-  if (announcement.ping === "everyone") {
-    lines.push("", "@everyone");
-  } else if (announcement.ping === "here") {
-    lines.push("", "@here");
+  if (ping) {
+    lines.push("", ping);
   }
 
   return trimForDiscord(lines.join("\n"));
+}
+
+function formatAnnouncementPing(ping) {
+  const pings = {
+    everyone: "@everyone",
+    here: "@here",
+    moderator: moderatorRoleId ? `<@&${moderatorRoleId}>` : "@moderator",
+    viewer: viewerRoleId ? `<@&${viewerRoleId}>` : "@viewer"
+  };
+
+  return pings[ping] || "";
 }
 
 function extractDiscordId(value) {
