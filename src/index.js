@@ -192,10 +192,10 @@ function buildSlashCommands() {
       .addStringOption((option) =>
         option.setName("question").setDescription("Question to search for").setRequired(true)
       ),
-    new SlashCommandBuilder().setName("overlays").setDescription("Get the overlays channel link"),
+    new SlashCommandBuilder().setName("overlays").setDescription("Get the Effects Academy website link"),
     new SlashCommandBuilder().setName("topaz").setDescription("Get the Topaz versions channel link"),
     new SlashCommandBuilder().setName("rules").setDescription("Get the rules channel link"),
-    new SlashCommandBuilder().setName("audios").setDescription("Get the audios channel link"),
+    new SlashCommandBuilder().setName("audios").setDescription("Get the Effects Academy website link"),
     new SlashCommandBuilder().setName("coinflip").setDescription("Flip a coin"),
     new SlashCommandBuilder().setName("comp").setDescription("Show the current editing competition"),
     new SlashCommandBuilder()
@@ -244,7 +244,7 @@ function buildSlashCommands() {
     new SlashCommandBuilder().setName("senioreditor").setDescription("Get senior editor role info"),
     new SlashCommandBuilder().setName("moderator").setDescription("Get the moderator application link"),
     new SlashCommandBuilder().setName("payhip").setDescription("Get MrBit's Payhip link"),
-    new SlashCommandBuilder().setName("presets").setDescription("Get the presets channel link"),
+    new SlashCommandBuilder().setName("presets").setDescription("Get the Effects Academy website link"),
     new SlashCommandBuilder().setName("programs").setDescription("Get the programs website link"),
     new SlashCommandBuilder().setName("ifg").setDescription("Get the IFG reply"),
     new SlashCommandBuilder().setName("reloadfaq").setDescription("Reload FAQ entries")
@@ -256,10 +256,10 @@ async function handleSlashCommand(interaction) {
     help: handleHelpCommand,
     faq: handleFaqCommand,
     ask: handleAskCommand,
-    overlays: () => replyWithConfiguredLink(interaction, overlaysChannelUrl, "overlays"),
+    overlays: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
     topaz: () => replyWithConfiguredLink(interaction, topazChannelUrl, "Topaz versions"),
     rules: () => replyWithConfiguredLink(interaction, rulesChannelUrl, "rules"),
-    audios: () => replyWithConfiguredLink(interaction, audiosChannelUrl, "audios"),
+    audios: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
     coinflip: () => interaction.reply(`The coin landed on **${pickRandom(["heads", "tails"])}**.`),
     comp: handleCompetitionCommand,
     setcomp: handleSetCompetitionCommand,
@@ -279,7 +279,7 @@ async function handleSlashCommand(interaction) {
     senioreditor: () => interaction.reply(seniorEditorMessage),
     moderator: handleModeratorCommand,
     payhip: () => interaction.reply(`MrBit's Payhip: ${payhipUrl}`),
-    presets: () => replyWithConfiguredLink(interaction, presetsChannelUrl, "presets"),
+    presets: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
     programs: () => interaction.reply(`After Effects, Premiere, and other programs: ${programsUrl}`),
     ifg: () => interaction.reply("I fucking guess 🥀"),
     reloadfaq: handleReloadFaqCommand
@@ -550,11 +550,11 @@ function buildCommandMenuEmbed(showStaffCommands = false) {
     .addFields(
       {
         name: "Channel Links",
-        value: "`/overlays` `/topaz` `/rules` `/audios` `/moderator` `/presets`"
+        value: "`/topaz` `/rules` `/moderator`"
       },
       {
         name: "Links",
-        value: "`/website` `/youtube` `/tiktok` `/nexlo` `/iusethis` `/payhip` `/programs`"
+        value: "`/website` `/overlays` `/audios` `/presets` `/youtube` `/tiktok` `/nexlo` `/iusethis` `/payhip` `/programs`"
       },
       {
         name: "Info",
