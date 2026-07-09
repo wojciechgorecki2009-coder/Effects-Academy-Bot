@@ -29,6 +29,7 @@ const viewerRoleId = process.env.VIEWER_ROLE_ID || "";
 const websiteUrl = "https://effectsacademy.com";
 const payhipUrl = "https://payhip.com/MrBitEdits";
 const programsUrl = "https://keyfla.me/windows";
+const fontFinderUrl = "https://www.myfonts.com/pages/whatthefont/";
 const youtubeUrl = "https://www.youtube.com/channel/UCfU49lYtzyIwKfE6gvaKL-w";
 const tiktokUrl = "https://www.tiktok.com/@mrbit_edits";
 const nexloTiktokUrl = "https://www.tiktok.com/@nexlo_ae";
@@ -246,6 +247,7 @@ function buildSlashCommands() {
     new SlashCommandBuilder().setName("payhip").setDescription("Get MrBit's Payhip link"),
     new SlashCommandBuilder().setName("presets").setDescription("Get the Effects Academy website link"),
     new SlashCommandBuilder().setName("programs").setDescription("Get the programs website link"),
+    new SlashCommandBuilder().setName("font").setDescription("Get the font finder link"),
     new SlashCommandBuilder().setName("ifg").setDescription("Get the IFG reply"),
     new SlashCommandBuilder().setName("reloadfaq").setDescription("Reload FAQ entries")
   ].map((command) => command.toJSON());
@@ -281,6 +283,7 @@ async function handleSlashCommand(interaction) {
     payhip: () => interaction.reply(`MrBit's Payhip: ${payhipUrl}`),
     presets: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
     programs: () => interaction.reply(`After Effects, Premiere, and other programs: ${programsUrl}`),
+    font: () => interaction.reply(`FInd photos from images using: ${fontFinderUrl}`),
     ifg: () => interaction.reply("I fucking guess 🥀"),
     reloadfaq: handleReloadFaqCommand
   };
@@ -554,7 +557,7 @@ function buildCommandMenuEmbed(showStaffCommands = false) {
       },
       {
         name: "Links",
-        value: "`/website` `/overlays` `/audios` `/presets` `/youtube` `/tiktok` `/nexlo` `/iusethis` `/payhip` `/programs`"
+        value: "`/website` `/overlays` `/audios` `/presets` `/youtube` `/tiktok` `/nexlo` `/iusethis` `/payhip` `/programs` `/font`"
       },
       {
         name: "Info",
