@@ -6,17 +6,13 @@ const {
   Client,
   EmbedBuilder,
   GatewayIntentBits,
-  PermissionsBitField,
-  SlashCommandBuilder
+  PermissionsBitField
 } = require("discord.js");
 
-const guildId = process.env.GUILD_ID || "";
-const overlaysChannelUrl = process.env.OVERLAYS_CHANNEL_URL || "";
+const commandPrefix = process.env.PREFIX || "!";
 const topazChannelUrl = process.env.TOPAZ_CHANNEL_URL || "";
 const moderatorApplicationChannelUrl = process.env.MODERATOR_APPLICATION_CHANNEL_URL || "";
-const presetsChannelUrl = process.env.PRESETS_CHANNEL_URL || "";
 const rulesChannelUrl = process.env.RULES_CHANNEL_URL || "";
-const audiosChannelUrl = process.env.AUDIOS_CHANNEL_URL || "";
 const announcementChannelUrl = process.env.ANNOUNCEMENT_CHANNEL_URL || "";
 const mrbitUserId = process.env.MRBIT_USER_ID || "";
 const competitionManagerRoleIds = (process.env.COMP_MANAGER_ROLE_IDS || "")
@@ -38,15 +34,15 @@ const faqsPath = path.join(__dirname, "..", "config", "faqs.json");
 const competitionStatePath = path.join(__dirname, "..", "config", "competition.json");
 
 const edgeReplies = [
-  "haha so funny let me dm mrbit ✌️",
-  "this isn't funny king 😩",
+  "haha so funny let me dm mrbit \u270c\ufe0f",
+  "this isn't funny king \ud83d\ude29",
   "Second time? The joke is already fighting for its life. Please stop making usage jokes.",
   "Okay now you are spamming it. Think about the morality of forcing a bot to relive the same tired joke.",
   "This is starting to hurt my digital feelings. I am literally begging you to develop one new bit.",
   "Stop. The joke is cooked, the usage joke is cooked, and your moral compass is buffering.",
   "You keep pressing this command like it owes you money. It does not. Stop spamming.",
-  "Final warning: every extra /edge is another confession that you have no fresh material.",
-  "I'm spending more usage on you ✌️",
+  "Final warning: every extra !edge is another confession that you have no fresh material.",
+  "I'm spending more usage on you \u270c\ufe0f",
   "No"
 ];
 const edgeSpamCounts = new Map();
@@ -60,7 +56,7 @@ const wavMessage =
   "There is no point uploading wave audios (yes wav's are better in terms of quality) not for editing if your going to render, export and then upload an edit in wav by the time it gets compressed into tiktok there is almost no to little difference to mp3. Wav is almost 30x bigger than mp3 for little to no benefit. Literally waste of space if you intending to upload the audio in a edit to tiktok. Shit will get compressed anyway";
 
 const seniorEditorMessage =
-  "You **cannot** get the senior editor role by begging gng 🥀 We only give it to people who are genuinely goated editors and deserve the recognition for their work, in simple terms make genuine good edit that stands out and impresses us and you will get it (asking us for it constantly guarantees you not to get it";
+  "You **cannot** get the senior editor role by begging gng \ud83e\udd40 We only give it to people who are genuinely goated editors and deserve the recognition for their work, in simple terms make genuine good edit that stands out and impresses us and you will get it (asking us for it constantly guarantees you not to get it";
 
 const moderatorApplicationNote =
   "We don't really that many mods your application most likely will be declined or be accepted when there is need for more moderators";
@@ -75,40 +71,43 @@ const pcMessage = [
 ].join("\n");
 
 const laptopMessage =
-  "Iusethis's laptop doesn't deserve a command lets be honest it uses a laptop gpu its just buns 🥀";
+  "Iusethis's laptop doesn't deserve a command lets be honest it uses a laptop gpu its just buns \ud83e\udd40";
 
 let faqs = loadFaqs();
 let competitionState = loadCompetitionState();
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds]
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
 });
 
-const slashCommands = buildSlashCommands();
-
-client.once("ready", async () => {
+client.once("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
-
-  try {
-    await registerSlashCommands();
-  } catch (error) {
-    console.error("Could not register slash commands:", error);
-  }
+  console.log(`Using command prefix: ${commandPrefix}`);
 });
 
-client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isChatInputCommand()) {
+client.on("messageCreate", async (message) => {
+  if (message.author.bot || !message.content.startsWith(commandPrefix)) {
+    return;
+  }
+
+  const withoutPrefix = message.content.slice(commandPrefix.length).trim();
+  const [rawCommandName, ...rest] = withoutPrefix.split(/\s+/);
+  const commandName = rawCommandName?.toLowerCase();
+  const args = rest.join(" ").trim();
+
+  if (!commandName) {
     return;
   }
 
   try {
-    await handleSlashCommand(interaction);
+    await handlePrefixCommand(message, commandName, args);
   } catch (error) {
     console.error(error);
-    await replyToInteraction(interaction, {
-      content: "Something went wrong while handling that command.",
-      ephemeral: true
-    });
+    await message.reply("Something went wrong while handling that command.").catch(() => null);
   }
 });
 
@@ -166,199 +165,123 @@ function saveCompetitionState(state) {
   fs.writeFileSync(competitionStatePath, `${JSON.stringify(state, null, 2)}\n`);
 }
 
-async function registerSlashCommands() {
-  if (guildId) {
-    const guild = await client.guilds.fetch(guildId);
-    await guild.commands.set(slashCommands);
-    console.log(`Registered ${slashCommands.length} slash commands for guild ${guildId}.`);
-    return;
-  }
-
-  await client.application.commands.set(slashCommands);
-  console.log(`Registered ${slashCommands.length} global slash commands.`);
-}
-
-function buildSlashCommands() {
-  return [
-    new SlashCommandBuilder().setName("help").setDescription("Show the bot command menu"),
-    new SlashCommandBuilder()
-      .setName("faq")
-      .setDescription("Show FAQ topics or a specific FAQ answer")
-      .addStringOption((option) =>
-        option.setName("topic").setDescription("FAQ topic or alias").setRequired(false)
-      ),
-    new SlashCommandBuilder()
-      .setName("ask")
-      .setDescription("Search the FAQ with a normal question")
-      .addStringOption((option) =>
-        option.setName("question").setDescription("Question to search for").setRequired(true)
-      ),
-    new SlashCommandBuilder().setName("overlays").setDescription("Get the Effects Academy website link"),
-    new SlashCommandBuilder().setName("topaz").setDescription("Get the Topaz versions channel link"),
-    new SlashCommandBuilder().setName("rules").setDescription("Get the rules channel link"),
-    new SlashCommandBuilder().setName("audios").setDescription("Get the Effects Academy website link"),
-    new SlashCommandBuilder().setName("coinflip").setDescription("Flip a coin"),
-    new SlashCommandBuilder().setName("comp").setDescription("Show the current editing competition"),
-    new SlashCommandBuilder()
-      .setName("setcomp")
-      .setDescription("Set and announce an editing competition")
-      .addStringOption((option) => option.setName("date_from").setDescription("Start date").setRequired(true))
-      .addStringOption((option) => option.setName("date_to").setDescription("End date").setRequired(true))
-      .addStringOption((option) => option.setName("prize").setDescription("Competition prize").setRequired(true))
-      .addStringOption((option) => option.setName("description").setDescription("Competition description").setRequired(true))
-      .addStringOption((option) => option.setName("name").setDescription("Competition name").setRequired(true))
-      .addStringOption((option) => option.setName("rules").setDescription("Competition rules").setRequired(true)),
-    new SlashCommandBuilder().setName("endcomp").setDescription("End the current editing competition"),
-    new SlashCommandBuilder()
-      .setName("servermessage")
-      .setDescription("Send a message to the announcement channel")
-      .addStringOption((option) =>
-        option.setName("name").setDescription("Announcement name/title").setRequired(true)
-      )
-      .addStringOption((option) =>
-        option.setName("description").setDescription("Announcement description").setRequired(true)
-      )
-      .addStringOption((option) =>
-        option
-          .setName("ping")
-          .setDescription("Who to ping with the announcement")
-          .setRequired(false)
-          .addChoices(
-            { name: "No ping", value: "none" },
-            { name: "@everyone", value: "everyone" },
-            { name: "@here", value: "here" },
-            { name: "@moderator", value: "moderator" },
-            { name: "@viewer", value: "viewer" }
-          )
-      ),
-    new SlashCommandBuilder().setName("edge").setDescription("Get the edge reply"),
-    new SlashCommandBuilder().setName("marvel").setDescription("Get MrBIt's Marvel take"),
-    new SlashCommandBuilder().setName("wav").setDescription("Get the WAV audio note"),
-    new SlashCommandBuilder().setName("website").setDescription("Get the official website link"),
-    new SlashCommandBuilder().setName("youtube").setDescription("Get the MrBitEdits YouTube link"),
-    new SlashCommandBuilder().setName("tiktok").setDescription("Get the MrBitEdits TikTok link"),
-    new SlashCommandBuilder().setName("nexlo").setDescription("Get Nexlo's TikTok link"),
-    new SlashCommandBuilder().setName("iusethis").setDescription("Get iusethis's TikTok link"),
-    new SlashCommandBuilder().setName("pc").setDescription("Get MrBit's PC specs"),
-    new SlashCommandBuilder().setName("laptop").setDescription("Get iusethis's laptop note"),
-    new SlashCommandBuilder().setName("members").setDescription("Get the server member count"),
-    new SlashCommandBuilder().setName("senioreditor").setDescription("Get senior editor role info"),
-    new SlashCommandBuilder().setName("moderator").setDescription("Get the moderator application link"),
-    new SlashCommandBuilder().setName("payhip").setDescription("Get MrBit's Payhip link"),
-    new SlashCommandBuilder().setName("presets").setDescription("Get the Effects Academy website link"),
-    new SlashCommandBuilder().setName("programs").setDescription("Get the programs website link"),
-    new SlashCommandBuilder().setName("font").setDescription("Get the font finder link"),
-    new SlashCommandBuilder().setName("ifg").setDescription("Get the IFG reply"),
-    new SlashCommandBuilder().setName("reloadfaq").setDescription("Reload FAQ entries")
-  ].map((command) => command.toJSON());
-}
-
-async function handleSlashCommand(interaction) {
+async function handlePrefixCommand(message, commandName, args) {
   const commandHandlers = {
     help: handleHelpCommand,
     faq: handleFaqCommand,
     ask: handleAskCommand,
-    overlays: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
-    topaz: () => replyWithConfiguredLink(interaction, topazChannelUrl, "Topaz versions"),
-    rules: () => replyWithConfiguredLink(interaction, rulesChannelUrl, "rules"),
-    audios: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
-    coinflip: () => interaction.reply(`The coin landed on **${pickRandom(["heads", "tails"])}**.`),
+    overlays: (msg) => msg.reply(`Official Effects Academy website: ${websiteUrl}`),
+    topaz: (msg) => replyWithConfiguredLink(msg, topazChannelUrl, "Topaz versions"),
+    rules: (msg) => replyWithConfiguredLink(msg, rulesChannelUrl, "rules"),
+    audios: (msg) => msg.reply(`Official Effects Academy website: ${websiteUrl}`),
+    coinflip: (msg) => msg.reply(`The coin landed on **${pickRandom(["heads", "tails"])}**.`),
     comp: handleCompetitionCommand,
     setcomp: handleSetCompetitionCommand,
     endcomp: handleEndCompetitionCommand,
     servermessage: handleServerMessageCommand,
     edge: handleEdgeCommand,
-    marvel: () => interaction.reply(marvelMessage),
-    wav: () => interaction.reply(wavMessage),
-    website: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
-    youtube: () => interaction.reply(`MrBitEdits YouTube: ${youtubeUrl}`),
-    tiktok: () => interaction.reply(`MrBitEdits TikTok: ${tiktokUrl}`),
-    nexlo: () => interaction.reply(`Nexlo's TikTok: ${nexloTiktokUrl}`),
-    iusethis: () => interaction.reply(`iusethis's TikTok: ${iusethisTiktokUrl}`),
-    pc: () => interaction.reply(pcMessage),
-    laptop: () => interaction.reply(laptopMessage),
+    marvel: (msg) => msg.reply(marvelMessage),
+    wav: (msg) => msg.reply(wavMessage),
+    website: (msg) => msg.reply(`Official Effects Academy website: ${websiteUrl}`),
+    youtube: (msg) => msg.reply(`MrBitEdits YouTube: ${youtubeUrl}`),
+    tiktok: (msg) => msg.reply(`MrBitEdits TikTok: ${tiktokUrl}`),
+    nexlo: (msg) => msg.reply(`Nexlo's TikTok: ${nexloTiktokUrl}`),
+    iusethis: (msg) => msg.reply(`iusethis's TikTok: ${iusethisTiktokUrl}`),
+    pc: (msg) => msg.reply(pcMessage),
+    laptop: (msg) => msg.reply(laptopMessage),
     members: handleMembersCommand,
-    senioreditor: () => interaction.reply(seniorEditorMessage),
+    senioreditor: (msg) => msg.reply(seniorEditorMessage),
     moderator: handleModeratorCommand,
-    payhip: () => interaction.reply(`MrBit's Payhip: ${payhipUrl}`),
-    presets: () => interaction.reply(`Official Effects Academy website: ${websiteUrl}`),
-    programs: () => interaction.reply(`After Effects, Premiere, and other programs: ${programsUrl}`),
-    font: () => interaction.reply(`FInd photos from images using: ${fontFinderUrl}`),
-    ifg: () => interaction.reply("I fucking guess 🥀"),
+    payhip: (msg) => msg.reply(`MrBit's Payhip: ${payhipUrl}`),
+    presets: (msg) => msg.reply(`Official Effects Academy website: ${websiteUrl}`),
+    programs: (msg) => msg.reply(`After Effects, Premiere, and other programs: ${programsUrl}`),
+    font: (msg) => msg.reply(`FInd photos from images using: ${fontFinderUrl}`),
+    ifg: (msg) => msg.reply("I fucking guess \ud83e\udd40"),
     reloadfaq: handleReloadFaqCommand
   };
 
-  const handler = commandHandlers[interaction.commandName];
+  const handler = commandHandlers[commandName];
   if (handler) {
-    await handler(interaction);
+    await handler(message, args);
   }
 }
 
-async function handleHelpCommand(interaction) {
-  await interaction.reply({ embeds: [buildCommandMenuEmbed(canManageInteraction(interaction))] });
+async function handleHelpCommand(message) {
+  await message.reply({ embeds: [buildCommandMenuEmbed(canManageMessage(message))] });
 }
 
-async function handleFaqCommand(interaction) {
-  const query = interaction.options.getString("topic") || "";
+async function handleFaqCommand(message, args) {
+  const query = args.trim();
 
   if (!query) {
     const list = faqs
       .map((faq) => `**${faq.id}** - ${faq.question}`)
       .join("\n");
 
-    await interaction.reply(trimForDiscord(`Available FAQs:\n${list}\n\nUse \`/faq topic:<name>\` to get an answer.`));
+    await message.reply(trimForDiscord(`Available FAQs:\n${list}\n\nUse \`${commandPrefix}faq topic\` to get an answer.`));
     return;
   }
 
   const faq = findBestFaq(query);
   if (!faq) {
-    await interaction.reply(`I could not find an FAQ for "${query}". Try \`/faq\` to see available topics.`);
+    await message.reply(`I could not find an FAQ for "${query}". Try \`${commandPrefix}faq\` to see available topics.`);
     return;
   }
 
-  await interaction.reply(formatFaqAnswer(faq));
+  await message.reply(formatFaqAnswer(faq));
 }
 
-async function handleAskCommand(interaction) {
-  const query = interaction.options.getString("question", true);
+async function handleAskCommand(message, args) {
+  const query = args.trim();
+  if (!query) {
+    await message.reply(`Use \`${commandPrefix}ask your question here\`.`);
+    return;
+  }
+
   const faq = findBestFaq(query);
-
   if (!faq) {
-    await interaction.reply("I do not have an answer for that yet. Try `/faq` to see the topics I know.");
+    await message.reply(`I do not have an answer for that yet. Try \`${commandPrefix}faq\` to see the topics I know.`);
     return;
   }
 
-  await interaction.reply(formatFaqAnswer(faq));
+  await message.reply(formatFaqAnswer(faq));
 }
 
-async function handleCompetitionCommand(interaction) {
-  await interaction.reply(competitionState?.active
+async function handleCompetitionCommand(message) {
+  await message.reply(competitionState?.active
     ? formatCompetitionAnnouncement(competitionState)
     : "There isn't any editing competitions on right now. Check back later");
 }
 
-async function handleSetCompetitionCommand(interaction) {
-  if (!canManageInteraction(interaction)) {
-    await interaction.reply({ content: "Only moderators or MrBit can set competitions.", ephemeral: true });
+async function handleSetCompetitionCommand(message, args) {
+  if (!canManageMessage(message)) {
+    await message.reply("Only moderators or MrBit can set competitions.");
     return;
   }
 
-  const announcementChannel = await getAnnouncementChannelFromGuild(interaction.guild);
+  const parts = parsePipeArgs(args);
+  if (parts.length < 6) {
+    await message.reply(`Use \`${commandPrefix}setcomp name | description | prize | start date | end date | rules\`.`);
+    return;
+  }
+
+  const announcementChannel = await getAnnouncementChannelFromGuild(message.guild);
   if (!announcementChannel) {
-    await interaction.reply({ content: "The announcement channel has not been configured yet.", ephemeral: true });
+    await message.reply("The announcement channel has not been configured yet.");
     return;
   }
 
-  await deleteCompetitionAnnouncementFromGuild(interaction.guild);
+  await deleteCompetitionAnnouncementFromGuild(message.guild);
 
+  const [name, description, prize, startDate, endDate, rules] = parts;
   const newCompetition = {
     active: true,
-    name: interaction.options.getString("name", true),
-    description: interaction.options.getString("description", true),
-    prize: interaction.options.getString("prize", true),
-    startDate: interaction.options.getString("date_from", true),
-    endDate: interaction.options.getString("date_to", true),
-    rules: interaction.options.getString("rules", true),
+    name,
+    description,
+    prize,
+    startDate,
+    endDate,
+    rules,
     channelId: announcementChannel.id,
     messageId: ""
   };
@@ -368,44 +291,50 @@ async function handleSetCompetitionCommand(interaction) {
   competitionState = newCompetition;
   saveCompetitionState(competitionState);
 
-  await interaction.reply({ content: "Competition announcement posted.", ephemeral: true });
+  await message.reply("Competition announcement posted.");
 }
 
-async function handleEndCompetitionCommand(interaction) {
-  if (!canManageInteraction(interaction)) {
-    await interaction.reply({ content: "Only moderators or MrBit can end competitions.", ephemeral: true });
+async function handleEndCompetitionCommand(message) {
+  if (!canManageMessage(message)) {
+    await message.reply("Only moderators or MrBit can end competitions.");
     return;
   }
 
-  await deleteCompetitionAnnouncementFromGuild(interaction.guild);
+  await deleteCompetitionAnnouncementFromGuild(message.guild);
   competitionState = { active: false };
   saveCompetitionState(competitionState);
-  await interaction.reply({ content: "Competition ended.", ephemeral: true });
+  await message.reply("Competition ended.");
 }
 
-async function handleServerMessageCommand(interaction) {
-  if (!canManageInteraction(interaction)) {
-    await interaction.reply({ content: "Only moderators or MrBit can send server messages.", ephemeral: true });
+async function handleServerMessageCommand(message, args) {
+  if (!canManageMessage(message)) {
+    await message.reply("Only moderators or MrBit can send server messages.");
     return;
   }
 
-  const announcementChannel = await getAnnouncementChannelFromGuild(interaction.guild);
+  const parts = parsePipeArgs(args);
+  if (parts.length < 2) {
+    await message.reply(`Use \`${commandPrefix}servermessage name | description | ping\`. Ping can be none, everyone, here, moderator, or viewer.`);
+    return;
+  }
+
+  const announcementChannel = await getAnnouncementChannelFromGuild(message.guild);
   if (!announcementChannel) {
-    await interaction.reply({ content: "The announcement channel has not been configured yet.", ephemeral: true });
+    await message.reply("The announcement channel has not been configured yet.");
     return;
   }
 
   await announcementChannel.send(formatServerAnnouncement({
-    name: interaction.options.getString("name", true),
-    description: interaction.options.getString("description", true),
-    ping: interaction.options.getString("ping") || "none"
+    name: parts[0],
+    description: parts[1],
+    ping: normalizePingChoice(parts[2] || "none")
   }));
-  await interaction.reply({ content: "Server message sent.", ephemeral: true });
+  await message.reply("Server message sent.");
 }
 
-async function handleEdgeCommand(interaction) {
-  const edgeReply = getEdgeReply(interaction.user.id);
-  await interaction.reply(edgeReply.content);
+async function handleEdgeCommand(message) {
+  const edgeReply = getEdgeReply(message.author.id);
+  await message.reply(edgeReply.content);
 
   if (!edgeReply.shouldDmMrBit) {
     return;
@@ -418,51 +347,42 @@ async function handleEdgeCommand(interaction) {
 
   try {
     const user = await client.users.fetch(mrbitUserId);
-    await user.send("someone told me to edge btw ✌️ can we ban him?");
+    await user.send("someone told me to edge btw \u270c\ufe0f can we ban him?");
   } catch (error) {
     console.error("Could not send edge DM:", error);
   }
 }
 
-async function handleMembersCommand(interaction) {
-  if (!interaction.guild) {
-    await interaction.reply("This command only works in a server.");
+async function handleMembersCommand(message) {
+  if (!message.guild) {
+    await message.reply("This command only works in a server.");
     return;
   }
 
-  const guild = await interaction.guild.fetch();
-  await interaction.reply(`Server member count **${guild.memberCount}**`);
+  const guild = await message.guild.fetch();
+  await message.reply(`Server member count **${guild.memberCount}**`);
 }
 
-async function handleModeratorCommand(interaction) {
-  await interaction.reply(moderatorApplicationChannelUrl
+async function handleModeratorCommand(message) {
+  await message.reply(moderatorApplicationChannelUrl
     ? `${moderatorApplicationNote}\n${moderatorApplicationChannelUrl}`
     : "The moderator application channel link has not been configured yet.");
 }
 
-async function handleReloadFaqCommand(interaction) {
-  if (!canManageInteraction(interaction)) {
-    await interaction.reply({ content: "Only server managers can reload the FAQ list.", ephemeral: true });
+async function handleReloadFaqCommand(message) {
+  if (!canManageMessage(message)) {
+    await message.reply("Only server managers can reload the FAQ list.");
     return;
   }
 
   faqs = loadFaqs();
-  await interaction.reply({ content: `Reloaded ${faqs.length} FAQ entries.`, ephemeral: true });
+  await message.reply(`Reloaded ${faqs.length} FAQ entries.`);
 }
 
-async function replyWithConfiguredLink(interaction, url, label) {
-  await interaction.reply(url
+async function replyWithConfiguredLink(message, url, label) {
+  await message.reply(url
     ? `You can find the ${label} here: ${url}`
     : `The ${label} channel link has not been configured yet.`);
-}
-
-async function replyToInteraction(interaction, options) {
-  if (interaction.replied || interaction.deferred) {
-    await interaction.followUp(options).catch(() => null);
-    return;
-  }
-
-  await interaction.reply(options).catch(() => null);
 }
 
 async function deleteCompetitionAnnouncementFromGuild(guild) {
@@ -495,22 +415,18 @@ async function getAnnouncementChannelFromGuild(guild) {
   return channel?.isTextBased() ? channel : null;
 }
 
-function canManageInteraction(interaction) {
-  if (interaction.user.id === mrbitUserId) {
+function canManageMessage(message) {
+  if (message.author.id === mrbitUserId) {
     return true;
   }
 
-  if (interaction.memberPermissions?.has(PermissionsBitField.Flags.ManageGuild)) {
+  if (message.member?.permissions?.has(PermissionsBitField.Flags.ManageGuild)) {
     return true;
   }
 
-  const roles = interaction.member?.roles;
+  const roles = message.member?.roles;
   if (roles?.cache) {
     return competitionManagerRoleIds.some((roleId) => roles.cache.has(roleId));
-  }
-
-  if (Array.isArray(roles)) {
-    return competitionManagerRoleIds.some((roleId) => roles.includes(roleId));
   }
 
   return false;
@@ -548,28 +464,28 @@ function getEdgeReply(userId) {
 function buildCommandMenuEmbed(showStaffCommands = false) {
   const embed = new EmbedBuilder()
     .setTitle("Effects Academy Bot Commands")
-    .setDescription("Use Discord slash commands.")
+    .setDescription(`Use commands with the \`${commandPrefix}\` prefix.`)
     .setColor(0x8b5cf6)
     .addFields(
       {
         name: "Channel Links",
-        value: "`/topaz` `/rules` `/moderator`"
+        value: "`!topaz` `!rules` `!moderator`"
       },
       {
         name: "Links",
-        value: "`/website` `/overlays` `/audios` `/presets` `/youtube` `/tiktok` `/nexlo` `/iusethis` `/payhip` `/programs` `/font`"
+        value: "`!website` `!overlays` `!audios` `!presets` `!youtube` `!tiktok` `!nexlo` `!iusethis` `!payhip` `!programs` `!font`"
       },
       {
         name: "Info",
-        value: "`/pc` `/laptop` `/members` `/senioreditor` `/marvel` `/wav`"
+        value: "`!pc` `!laptop` `!members` `!senioreditor` `!marvel` `!wav`"
       },
       {
         name: "Fun",
-        value: "`/edge` `/coinflip` `/ifg`"
+        value: "`!edge` `!coinflip` `!ifg`"
       },
       {
         name: "FAQ",
-        value: "`/faq` `/faq topic:<topic>` `/ask question:<question>`"
+        value: "`!faq` `!faq topic` `!ask question`"
       }
     );
 
@@ -577,11 +493,11 @@ function buildCommandMenuEmbed(showStaffCommands = false) {
     embed.addFields(
       {
         name: "Competition",
-        value: "`/comp` `/setcomp` `/endcomp`"
+        value: "`!comp` `!setcomp name | description | prize | start date | end date | rules` `!endcomp`"
       },
       {
         name: "Admin",
-        value: "`/servermessage` `/reloadfaq`"
+        value: "`!servermessage name | description | ping` `!reloadfaq`"
       }
     );
   }
@@ -681,6 +597,20 @@ function formatAnnouncementPing(ping) {
   };
 
   return pings[ping] || "";
+}
+
+function normalizePingChoice(value) {
+  return String(value)
+    .toLowerCase()
+    .replace(/^@/, "")
+    .trim();
+}
+
+function parsePipeArgs(value) {
+  return String(value)
+    .split("|")
+    .map((part) => part.trim())
+    .filter(Boolean);
 }
 
 function extractDiscordId(value) {
